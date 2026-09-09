@@ -4,7 +4,6 @@ import Button from "@/components/ui/Button";
 
 export default function Hero() {
   const { panels, ctaLabel, ctaHref } = siteConfig.hero;
-  const ctaIndex = Math.floor(panels.length / 2);
 
   return (
     <section className="relative grid grid-cols-1 sm:grid-cols-3 sm:h-[70vh] sm:min-h-[420px]">
@@ -27,17 +26,15 @@ export default function Hero() {
             className="opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-100"
           />
 
-          {i === ctaIndex ? (
-            <div className="absolute left-1/2 top-1/2 w-[85%] max-w-xs -translate-x-1/2 -translate-y-1/2 opacity-100 transition-opacity duration-300 ease-out sm:w-auto md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
-              <Button
-                href={ctaHref}
-                variant="outline"
-                className="w-full bg-[var(--color-surface)]/95 backdrop-blur-sm"
-              >
-                {ctaLabel}
-              </Button>
-            </div>
-          ) : null}
+          <div className="absolute left-1/2 top-1/2 w-[85%] max-w-xs -translate-x-1/2 -translate-y-1/2 opacity-100 transition-opacity duration-300 ease-out sm:w-auto md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
+            <Button
+              href={ctaHref}
+              variant="outline"
+              className="w-full bg-[var(--color-surface)]/95 backdrop-blur-sm"
+            >
+              {ctaLabel}
+            </Button>
+          </div>
         </div>
       ))}
     </section>
