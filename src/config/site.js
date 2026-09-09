@@ -31,8 +31,6 @@ export const siteConfig = {
     "Accessories",
     "Sale",
   ],
-  navVisibleCount: 6, // links shown before the rest collapse into "More"
-  navOverflowLabel: "More",
 
   // ---- Hero (3-panel split banner) -----------------------------------------
   hero: {
@@ -49,6 +47,27 @@ export const siteConfig = {
   story: {
     quote:
       "It begins with a single thread. A pattern drawn from culture, a rhythm carried through fabric. From motive to form, the line becomes a language.",
+  },
+
+  // ---- Category showcase (image tiles under a heading) ----------------------
+  categoryShowcase: {
+    heading: "Find The Perfect Piece",
+    items: [
+      { label: "Dresses", tone: 0, href: "#" },
+      { label: "Outerwear", tone: 2, href: "#" },
+      { label: "Sets", tone: 4, href: "#" },
+    ],
+  },
+
+  // ---- Category banner (large 2-panel split with CTA) ------------------------
+  categoryBanner: [
+    { label: "Shop Dresses", tone: 3, href: "#" },
+    { label: "Shop Matching Sets", tone: 1, href: "#" },
+  ],
+
+  // ---- Trending styles (horizontal scrolling product rail) -------------------
+  trending: {
+    heading: "Trending Styles",
   },
 
   // ---- Product detail page ----------------------------------------------------
@@ -128,6 +147,21 @@ export const siteConfig = {
   // ---- Floating UI ------------------------------------------------------------
   discountBadge: "Up to 10% OFF",
   chatBubbleLabel: "Chat with us",
+
+  // ---- Chat panel (opens from the floating chat bubble) ----------------------
+  chat: {
+    heading: "Chat",
+    assistantName: "Aria",
+    assistantRole: "AI Assistant",
+    greeting: [
+      "Hi 👋 Welcome to LL!",
+      "Looking for something specific or need help with your order? We're here to help. 💬",
+      "Tell us what you need, and we'll be happy to assist you.",
+    ],
+    consentText:
+      "By starting this chat, you consent to us recording this conversation to improve your experience.",
+    inputPlaceholder: "Ask a question",
+  },
 
   // ---- Footer -------------------------------------------------------------------
   footer: {

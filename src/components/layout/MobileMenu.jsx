@@ -14,7 +14,8 @@ export default function MobileMenu({ open, onClose }) {
     >
       <button
         type="button"
-        aria-label="Close menu"
+        aria-hidden="true"
+        tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 bg-black/30"
       />

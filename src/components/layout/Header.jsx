@@ -5,14 +5,20 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
+import { getAllProducts } from "@/data/products";
 import MobileMenu from "./MobileMenu";
+import SearchOverlay from "./SearchOverlay";
+import CartDrawer from "./CartDrawer";
+import AccountModal from "./AccountModal";
+
+const searchPicks = getAllProducts().slice(0, 4);
 
 export default function Header() {
   const { scrolled } = useScrollPosition(40);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const visibleLinks = siteConfig.navLinks.slice(0, siteConfig.navVisibleCount);
-  const overflowLinks = siteConfig.navLinks.slice(siteConfig.navVisibleCount);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   return (
     <>
@@ -51,20 +57,24 @@ export default function Header() {
           </Link>
 
           <div className="ml-auto flex items-center gap-4 text-[var(--color-text)]">
-            <IconButton label="Search">
+            <IconButton label="Search" onClick={() => setSearchOpen(true)}>
               <SearchIcon />
             </IconButton>
-            <IconButton label="Account" className="hidden md:inline-flex">
+            <IconButton
+              label="Account"
+              className="hidden md:inline-flex"
+              onClick={() => setAccountOpen(true)}
+            >
               <UserIcon />
             </IconButton>
-            <IconButton label="Bag">
+            <IconButton label="Bag" onClick={() => setCartOpen(true)}>
               <BagIcon />
             </IconButton>
           </div>
         </div>
 
         <nav className="hidden justify-center gap-7 px-5 pb-3 md:flex">
-          {visibleLinks.map((link) => (
+          {siteConfig.navLinks.map((link) => (
             <a
               key={link}
               href="#"
@@ -73,37 +83,23 @@ export default function Header() {
               {link}
             </a>
           ))}
-          {overflowLinks.length > 0 ? (
-            <div className="group relative">
-              <button className="tracking-nav whitespace-nowrap text-[11px] uppercase text-[var(--color-primary)] transition-colors hover:text-[var(--color-primary-dark)]">
-                {siteConfig.navOverflowLabel}
-              </button>
-              <div className="invisible absolute left-1/2 top-full z-10 w-48 -translate-x-1/2 translate-y-1 border border-[var(--color-line)] bg-[var(--color-surface)] py-2 opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:translate-y-2 group-hover:opacity-100">
-                {overflowLinks.map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    className="tracking-nav block px-4 py-2 text-center text-[11px] uppercase text-[var(--color-primary)] hover:text-[var(--color-primary-dark)]"
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-          ) : null}
         </nav>
       </header>
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} products={searchPicks} />
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
     </>
   );
 }
 
-function IconButton({ children, label, className }) {
+function IconButton({ children, label, className, onClick }) {
   return (
     <button
       type="button"
       aria-label={label}
+      onClick={onClick}
       className={cn("inline-flex items-center justify-center", className)}
     >
       {children}

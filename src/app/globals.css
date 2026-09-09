@@ -78,6 +78,15 @@ body {
   letter-spacing: 0.12em;
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ==========================================================================
    Marquee — seamless infinite horizontal scroll
    ========================================================================== */
