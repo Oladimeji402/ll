@@ -27,8 +27,18 @@ export default function ProductCard({ product, theme = "light" }) {
         />
 
         {/* Desktop: full-width bar revealed on hover */}
-        <div className="absolute inset-x-0 bottom-0 hidden translate-y-full bg-[var(--color-primary)] py-3 text-center transition-transform duration-300 ease-out group-hover:translate-y-0 md:block">
-          <span className="tracking-nav text-[11px] uppercase text-[var(--color-on-primary)]">
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 hidden translate-y-full py-3 text-center transition-transform duration-300 ease-out group-hover:translate-y-0 md:block",
+            isDark ? "bg-[var(--color-surface)]" : "bg-[var(--color-primary)]",
+          )}
+        >
+          <span
+            className={cn(
+              "tracking-nav text-[11px] uppercase",
+              isDark ? "text-[var(--color-primary)]" : "text-[var(--color-on-primary)]",
+            )}
+          >
             Quick Add
           </span>
         </div>
@@ -53,15 +63,17 @@ export default function ProductCard({ product, theme = "light" }) {
         </p>
         <p
           className={cn(
-            "mt-1 text-sm",
-            isDark ? "text-[var(--color-accent)]" : "text-[var(--color-primary)]",
+            "mt-1 inline-block px-2 py-0.5 text-sm transition-colors duration-300",
+            isDark
+              ? "text-[var(--color-accent)] group-hover:bg-[var(--color-surface)] group-hover:text-[var(--color-primary)]"
+              : "text-[var(--color-primary)]",
           )}
         >
           {product.originalPrice ? (
             <span
               className={cn(
                 "mr-2 line-through",
-                isDark ? "text-[var(--color-on-primary)]/60" : "text-[var(--color-text-muted)]",
+                isDark ? "text-[var(--color-on-primary)]/60 group-hover:text-[var(--color-text-muted)]" : "text-[var(--color-text-muted)]",
               )}
             >
               {formatPrice(product.originalPrice)}
