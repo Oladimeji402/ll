@@ -104,29 +104,26 @@ export const siteConfig = {
           "Placeholder answer — list the regions or countries you currently ship to and typical delivery times.",
       },
     ],
-    reviewsHeading: "Customers Are Saying",
-    reviewsRating: 4.87,
-    reviewsCount: 22,
-    reviews: [
-      {
-        text: "The piece is a very nice and stylish outfit. I get compliments every time I wear it.",
-        rating: 5,
-        name: "Amara Johnson",
-        product: "Look 01",
-      },
-      {
-        text: "Great quality fabric and the fit was true to size. Will definitely order again.",
-        rating: 5,
-        name: "Chidinma Okafor",
-        product: "Piece 03",
-      },
-      {
-        text: "Fast delivery and the packaging was beautiful. Exactly as pictured.",
-        rating: 4,
-        name: "Zainab Bello",
-        product: "Style 09",
-      },
-    ],
+    // Placeholder "customer reviews" widget — shaped to drop in a real
+    // reviews app (Judge.me, Loox, Okendo, …) later without a redesign.
+    customerReviews: {
+      heading: "Customer Reviews",
+      average: 0,
+      count: 0,
+      breakdown: [
+        { stars: 5, percent: 0 },
+        { stars: 4, percent: 0 },
+        { stars: 3, percent: 0 },
+        { stars: 2, percent: 0 },
+        { stars: 1, percent: 0 },
+      ],
+      writeReviewLabel: "Write a Review",
+      searchPlaceholder: "Search reviews",
+      sortLabel: "Most Relevant",
+      filterLabel: "All Ratings",
+      mediaFilterLabel: "With Media",
+      emptyStateText: "No reviews yet",
+    },
   },
 
   // ---- Floating UI ------------------------------------------------------------

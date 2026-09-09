@@ -6,9 +6,9 @@ import ChatBubble from "@/components/layout/ChatBubble";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import RelatedProducts from "@/components/sections/RelatedProducts";
+import CustomerReviews from "@/components/sections/CustomerReviews";
 import TrustBadges from "@/components/sections/TrustBadges";
 import Faq from "@/components/sections/Faq";
-import Reviews from "@/components/sections/Reviews";
 import { getAllProducts, getProductBySlug, getRelatedProducts } from "@/data/products";
 
 export function generateStaticParams() {
@@ -40,9 +40,9 @@ export default async function ProductPage({ params }) {
         </div>
 
         <RelatedProducts products={related} />
+        <CustomerReviews />
         <TrustBadges />
         <Faq />
-        <Reviews />
       </main>
 
       <Footer />
