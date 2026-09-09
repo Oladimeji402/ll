@@ -9,9 +9,8 @@
 
 export const siteConfig = {
   // ---- Brand --------------------------------------------------------------
-  brandName: "BRAND NAME",
-  brandInitial: "B",
-  metaTitle: "BRAND NAME — Contemporary Ready-to-Wear",
+  brandName: "LL",
+  metaTitle: "LL — Contemporary Ready-to-Wear",
   metaDescription:
     "Placeholder storefront for a contemporary clothing brand. Replace this copy, the images, and the colors to launch your client's site.",
 
@@ -89,7 +88,7 @@ export const siteConfig = {
     faqHeading: "Frequently Asked Questions",
     faq: [
       {
-        question: "What can I buy from BRAND NAME?",
+        question: "What can I buy from LL?",
         answer:
           "Placeholder answer — describe your product range here: ready-to-wear, accessories, made-to-order pieces, and more.",
       },
@@ -150,6 +149,6 @@ export const siteConfig = {
       },
     ],
     social: ["Instagram", "TikTok", "Pinterest"],
-    copyrightHolder: "BRAND NAME",
+    copyrightHolder: "LL",
   },
 };

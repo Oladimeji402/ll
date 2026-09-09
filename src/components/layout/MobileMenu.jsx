@@ -45,7 +45,7 @@ export default function MobileMenu({ open, onClose }) {
               key={link}
               href="#"
               onClick={onClose}
-              className="tracking-nav border-b border-[var(--color-line)] py-4 text-xs uppercase text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)]"
+              className="tracking-nav border-b border-[var(--color-line)] py-4 text-xs uppercase text-[var(--color-primary)] transition-colors hover:text-[var(--color-primary-dark)]"
             >
               {link}
             </a>

@@ -12,8 +12,8 @@
   --color-surface: #ffffff;
 
   /* Brand */
-  --color-primary: #6b2737; /* deep maroon — logo, headings, prices */
-  --color-primary-dark: #4a1b27;
+  --color-primary: #49192f; /* deep maroon — logo, headings, prices, nav links */
+  --color-primary-dark: #371323;
   --color-accent: #c48793; /* dusty rose — decorative accents */
 
   /* Text */
@@ -35,7 +35,8 @@
   /* Type */
   --font-serif: var(--font-playfair), Georgia, "Times New Roman", Times, serif;
   --font-sans:
-    "Helvetica Neue", Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+    var(--font-work-sans), "Helvetica Neue", Arial, -apple-system,
+    BlinkMacSystemFont, sans-serif;
 
   --header-height: 128px;
 }

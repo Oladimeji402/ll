@@ -43,7 +43,7 @@ export default function Header() {
           <Link
             href="/"
             className={cn(
-              "font-serif flex items-center gap-2 justify-self-center text-[var(--color-primary)] transition-[font-size] duration-300",
+              "font-serif flex items-center gap-3 justify-self-center tracking-[0.2em] text-[var(--color-primary)] transition-[font-size] duration-300",
               scrolled ? "text-2xl" : "text-3xl md:text-4xl",
             )}
           >
@@ -64,19 +64,19 @@ export default function Header() {
           </div>
         </div>
 
-        <nav className="hidden justify-center gap-7 border-t border-[var(--color-line)] px-5 py-3 md:flex">
+        <nav className="hidden justify-center gap-7 px-5 py-3 md:flex">
           {visibleLinks.map((link) => (
             <a
               key={link}
               href="#"
-              className="tracking-nav whitespace-nowrap text-[11px] uppercase text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)]"
+              className="tracking-nav whitespace-nowrap text-[11px] uppercase text-[var(--color-primary)] transition-colors hover:text-[var(--color-primary-dark)]"
             >
               {link}
             </a>
           ))}
           {overflowLinks.length > 0 ? (
             <div className="group relative">
-              <button className="tracking-nav whitespace-nowrap text-[11px] uppercase text-[var(--color-text)] transition-colors hover:text-[var(--color-primary)]">
+              <button className="tracking-nav whitespace-nowrap text-[11px] uppercase text-[var(--color-primary)] transition-colors hover:text-[var(--color-primary-dark)]">
                 {siteConfig.navOverflowLabel}
               </button>
               <div className="invisible absolute left-1/2 top-full z-10 w-48 -translate-x-1/2 translate-y-1 border border-[var(--color-line)] bg-[var(--color-surface)] py-2 opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:translate-y-2 group-hover:opacity-100">
@@ -84,7 +84,7 @@ export default function Header() {
                   <a
                     key={link}
                     href="#"
-                    className="tracking-nav block px-4 py-2 text-center text-[11px] uppercase text-[var(--color-text)] hover:text-[var(--color-primary)]"
+                    className="tracking-nav block px-4 py-2 text-center text-[11px] uppercase text-[var(--color-primary)] hover:text-[var(--color-primary-dark)]"
                   >
                     {link}
                   </a>
