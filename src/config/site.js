@@ -141,6 +141,18 @@ export const siteConfig = {
       filterLabel: "All Ratings",
       mediaFilterLabel: "With Media",
       emptyStateText: "No reviews yet",
+      // Two-step "write a review" modal: pick a star rating, then the form.
+      writeReviewForm: {
+        emailLabel: "Your email",
+        emailPlaceholder: "user@example.com",
+        nameLabel: "Display name",
+        namePlaceholder: "Jane D",
+        reviewLabel: "Review",
+        reviewPlaceholder: "What would you tell your friends",
+        mediaLabel: "Media",
+        mediaHint: "Reviews with media are found to be more helpful",
+        doneLabel: "Done",
+      },
     },
   },
 

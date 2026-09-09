@@ -40,7 +40,7 @@ export default async function ProductPage({ params }) {
         </div>
 
         <RelatedProducts products={related} />
-        <CustomerReviews />
+        <CustomerReviews product={product} />
         <TrustBadges />
         <Faq />
       </main>

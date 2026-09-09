@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Reveal from "@/components/ui/Reveal";
+import WriteReviewModal from "@/components/product/WriteReviewModal";
 import { siteConfig } from "@/config/site";
 
 /**
@@ -6,7 +10,8 @@ import { siteConfig } from "@/config/site";
  * what a real reviews app (Judge.me, Loox, Okendo, …) renders, so wiring
  * one up later is a drop-in swap rather than a redesign.
  */
-export default function CustomerReviews() {
+export default function CustomerReviews({ product }) {
+  const [modalOpen, setModalOpen] = useState(false);
   const {
     heading,
     average,
@@ -69,6 +74,7 @@ export default function CustomerReviews() {
         </div>
         <button
           type="button"
+          onClick={() => setModalOpen(true)}
           className="tracking-nav bg-[var(--color-primary)] px-5 py-2.5 text-xs uppercase text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)]"
         >
           {writeReviewLabel}
@@ -95,6 +101,8 @@ export default function CustomerReviews() {
       <Reveal className="mt-10 py-6 text-center text-sm text-[var(--color-text-muted)]">
         {emptyStateText}
       </Reveal>
+
+      <WriteReviewModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} />
     </section>
   );
 }
