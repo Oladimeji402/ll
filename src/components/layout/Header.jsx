@@ -25,7 +25,7 @@ export default function Header() {
       >
         <div
           className={cn(
-            "mx-auto flex max-w-7xl items-center justify-between px-5 transition-[padding] duration-300",
+            "mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-5 transition-[padding] duration-300",
             scrolled ? "py-3" : "py-5",
           )}
         >
@@ -33,7 +33,7 @@ export default function Header() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex flex-col gap-[5px] md:hidden"
+            className="flex flex-col gap-[5px] justify-self-start md:hidden"
           >
             <span className="h-px w-6 bg-[var(--color-text)]" />
             <span className="h-px w-6 bg-[var(--color-text)]" />
@@ -43,14 +43,15 @@ export default function Header() {
           <Link
             href="/"
             className={cn(
-              "font-serif text-[var(--color-primary)] transition-[font-size] duration-300",
+              "font-serif flex items-center gap-2 justify-self-center text-[var(--color-primary)] transition-[font-size] duration-300",
               scrolled ? "text-2xl" : "text-3xl md:text-4xl",
             )}
           >
+            <span aria-hidden className="h-[0.7em] w-px bg-[var(--color-primary)]" />
             {siteConfig.brandName}
           </Link>
 
-          <div className="flex items-center gap-4 text-[var(--color-text)]">
+          <div className="flex items-center justify-self-end gap-4 text-[var(--color-text)]">
             <IconButton label="Search">
               <SearchIcon />
             </IconButton>

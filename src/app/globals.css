@@ -33,7 +33,7 @@
   --tone-4: #e3cdb8;
 
   /* Type */
-  --font-serif: Georgia, "Times New Roman", Times, serif;
+  --font-serif: var(--font-playfair), Georgia, "Times New Roman", Times, serif;
   --font-sans:
     "Helvetica Neue", Arial, -apple-system, BlinkMacSystemFont, sans-serif;
 

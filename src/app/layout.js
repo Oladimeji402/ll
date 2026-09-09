@@ -1,5 +1,13 @@
+import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/config/site";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+});
 
 export const metadata = {
   title: siteConfig.metaTitle,
@@ -8,8 +16,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-[var(--color-bg)]">
+    <html
+      lang="en"
+      className={`h-full antialiased ${playfair.variable}`}
+    >
+      <body className="flex min-h-full flex-col bg-[var(--color-bg)] font-sans">
         {children}
       </body>
     </html>

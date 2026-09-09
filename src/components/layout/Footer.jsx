@@ -8,8 +8,8 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-[var(--color-line)] bg-[var(--color-bg-alt)]">
-      <Reveal className="mx-auto max-w-7xl px-5 pb-10 pt-16 text-center">
-        <h2 className="font-serif text-2xl text-[var(--color-primary)]">
+      <Reveal className="mx-auto max-w-7xl px-5 pb-8 pt-10 text-center sm:pb-10 sm:pt-16">
+        <h2 className="font-serif text-xl text-[var(--color-primary)] sm:text-2xl">
           {footer.newsletterHeading}
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-muted)]">
@@ -17,7 +17,7 @@ export default function Footer() {
         </p>
         <form
           onSubmit={(e) => e.preventDefault()}
-          className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
+          className="mx-auto mt-5 flex max-w-md flex-col gap-3 sm:mt-6 sm:flex-row"
         >
           <input
             type="email"
@@ -34,12 +34,12 @@ export default function Footer() {
         </form>
       </Reveal>
 
-      <div className="mx-auto grid max-w-7xl gap-10 border-t border-[var(--color-line)] px-5 py-12 sm:grid-cols-2 md:grid-cols-4">
-        <div>
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-8 border-t border-[var(--color-line)] px-5 py-8 text-center sm:gap-10 sm:py-12 sm:text-left md:grid-cols-4">
+        <div className="col-span-2 sm:col-span-1">
           <p className="font-serif text-xl text-[var(--color-primary)]">
             {brandName}
           </p>
-          <div className="mt-4 flex gap-4">
+          <div className="mt-4 flex justify-center gap-4 sm:justify-start">
             {footer.social.map((s) => (
               <a
                 key={s}
@@ -57,7 +57,7 @@ export default function Footer() {
             <p className="tracking-nav text-xs uppercase text-[var(--color-text)]">
               {col.heading}
             </p>
-            <ul className="mt-4 flex flex-col gap-3">
+            <ul className="mt-3 flex flex-col gap-2 sm:mt-4 sm:gap-3">
               {col.links.map((link) => (
                 <li key={link}>
                   <a
@@ -73,7 +73,7 @@ export default function Footer() {
         ))}
       </div>
 
-      <div className="border-t border-[var(--color-line)] px-5 py-6 text-center text-xs text-[var(--color-text-muted)]">
+      <div className="border-t border-[var(--color-line)] px-5 py-4 text-center text-xs text-[var(--color-text-muted)] sm:py-6">
         &copy; {new Date().getFullYear()} {footer.copyrightHolder}. All rights
         reserved.
       </div>
