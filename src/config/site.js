@@ -173,8 +173,22 @@ export const siteConfig = {
   chatBubbleLabel: "Chat with us",
 
   // ---- Chat panel (opens from the floating chat bubble) ----------------------
+  // A small tabbed widget: Home (sign up + featured collection), Orders and
+  // Account (both a sign-in prompt — no accounts exist yet, so both point to
+  // the same placeholder form), and Chat (the AI assistant).
   chat: {
     heading: "Chat",
+    emailPlaceholder: "Email",
+    signInLabel: "Sign In",
+    home: {
+      heading: "Earn rewards, track orders, and save your shopping history",
+    },
+    orders: {
+      heading: "Sign in to view your orders",
+    },
+    account: {
+      heading: "Sign in to view your account",
+    },
     assistantName: "Aria",
     assistantRole: "AI Assistant",
     greeting: [

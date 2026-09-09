@@ -26,11 +26,20 @@ export default function ProductCard({ product, theme = "light" }) {
           className="opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
         />
 
-        <div className="absolute inset-x-0 bottom-0 translate-y-full bg-[var(--color-primary)] py-3 text-center transition-transform duration-300 ease-out group-hover:translate-y-0">
+        {/* Desktop: full-width bar revealed on hover */}
+        <div className="absolute inset-x-0 bottom-0 hidden translate-y-full bg-[var(--color-primary)] py-3 text-center transition-transform duration-300 ease-out group-hover:translate-y-0 md:block">
           <span className="tracking-nav text-[11px] uppercase text-[var(--color-on-primary)]">
             Quick Add
           </span>
         </div>
+
+        {/* Mobile: no reliable hover, so show a persistent quick-add button instead */}
+        <span
+          aria-hidden="true"
+          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] md:hidden"
+        >
+          <BagPlusIcon />
+        </span>
       </div>
 
       <div className="pt-4 text-center">
@@ -62,5 +71,15 @@ export default function ProductCard({ product, theme = "light" }) {
         </p>
       </div>
     </Link>
+  );
+}
+
+function BagPlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M6 8h12l-1 13H7L6 8Z" strokeLinejoin="round" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" strokeLinecap="round" />
+      <path d="M12 12v4M10 14h4" strokeLinecap="round" />
+    </svg>
   );
 }

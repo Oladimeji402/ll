@@ -38,7 +38,7 @@ export default function Header() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex flex-col gap-[5px] md:hidden"
+            className="-m-2 flex cursor-pointer flex-col gap-[5px] p-2 md:hidden"
           >
             <span className="h-px w-6 bg-[var(--color-text)]" />
             <span className="h-px w-6 bg-[var(--color-text)]" />
@@ -100,7 +100,7 @@ function IconButton({ children, label, className, onClick }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={cn("inline-flex items-center justify-center", className)}
+      className={cn("-m-2 inline-flex cursor-pointer items-center justify-center p-2", className)}
     >
       {children}
     </button>

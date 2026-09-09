@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import Reveal from "@/components/ui/Reveal";
 import ProductCard from "@/components/ui/ProductCard";
@@ -41,12 +41,30 @@ export default function CollectionToolbar({ products, refineOptions }) {
   const [sortLabel, setSortLabel] = useState(SORT_OPTIONS[0].label);
   const [sortValue, setSortValue] = useState(SORT_OPTIONS[0].value);
   const [dense, setDense] = useState(false);
+  const toolbarRef = useRef(null);
 
   const sorted = useMemo(() => sortProducts(products, sortValue), [products, sortValue]);
 
+  useEffect(() => {
+    if (!refineOpen && !sortOpen) return;
+
+    function handlePointerDown(e) {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target)) {
+        setRefineOpen(false);
+        setSortOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [refineOpen, sortOpen]);
+
   return (
     <section className="mx-auto max-w-7xl px-5 pb-16 sm:pb-20">
-      <div className="relative flex flex-wrap items-center justify-between gap-4 border-y border-[var(--color-line)] py-4">
+      <div
+        ref={toolbarRef}
+        className="relative flex flex-wrap items-center justify-between gap-4 border-y border-[var(--color-line)] py-4"
+      >
         <div className="relative">
           <button
             type="button"
@@ -55,7 +73,7 @@ export default function CollectionToolbar({ products, refineOptions }) {
               setSortOpen(false);
             }}
             aria-expanded={refineOpen}
-            className="tracking-nav flex items-center gap-2 text-xs uppercase text-[var(--color-text)]"
+            className="tracking-nav -m-2 flex cursor-pointer items-center gap-2 p-2 text-xs uppercase text-[var(--color-text)]"
           >
             Refine
             <Chevron open={refineOpen} />
@@ -63,25 +81,25 @@ export default function CollectionToolbar({ products, refineOptions }) {
 
           <div
             className={cn(
-              "absolute left-0 top-full z-20 mt-3 grid w-64 overflow-hidden bg-[var(--color-surface)] shadow-lg transition-[grid-template-rows] duration-300 ease-out",
-              refineOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+              "absolute left-0 top-full z-20 mt-3 w-64 origin-top border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-lg transition-all duration-200 ease-out",
+              refineOpen
+                ? "pointer-events-auto scale-y-100 opacity-100"
+                : "pointer-events-none scale-y-95 opacity-0",
             )}
           >
-            <div className="min-h-0 border border-[var(--color-line)] p-4">
-              <ul className="flex flex-col gap-3">
-                {refineOptions.map((option) => (
-                  <li key={option}>
-                    <label className="flex items-center gap-3 text-sm text-[var(--color-text)]">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 accent-[var(--color-primary)]"
-                      />
-                      {option}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ul className="flex flex-col gap-3">
+              {refineOptions.map((option) => (
+                <li key={option}>
+                  <label className="flex items-center gap-3 text-sm text-[var(--color-text)]">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-[var(--color-primary)]"
+                    />
+                    {option}
+                  </label>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
@@ -98,7 +116,7 @@ export default function CollectionToolbar({ products, refineOptions }) {
                 setRefineOpen(false);
               }}
               aria-expanded={sortOpen}
-              className="tracking-nav flex items-center gap-2 text-xs uppercase text-[var(--color-text)]"
+              className="tracking-nav -m-2 flex cursor-pointer items-center gap-2 p-2 text-xs uppercase text-[var(--color-text)]"
             >
               Sort
               <Chevron open={sortOpen} />
@@ -106,27 +124,27 @@ export default function CollectionToolbar({ products, refineOptions }) {
 
             <div
               className={cn(
-                "absolute right-0 top-full z-20 mt-3 grid w-56 overflow-hidden bg-[var(--color-surface)] shadow-lg transition-[grid-template-rows] duration-300 ease-out",
-                sortOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                "absolute right-0 top-full z-20 mt-3 w-56 origin-top border border-[var(--color-line)] bg-[var(--color-surface)] py-2 shadow-lg transition-all duration-200 ease-out",
+                sortOpen
+                  ? "pointer-events-auto scale-y-100 opacity-100"
+                  : "pointer-events-none scale-y-95 opacity-0",
               )}
             >
-              <div className="min-h-0 border border-[var(--color-line)] py-2">
-                {SORT_OPTIONS.map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() => {
-                      setSortLabel(option.label);
-                      setSortValue(option.value);
-                      setSortOpen(false);
-                    }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-alt)]"
-                  >
-                    <span className={cn("w-4", sortLabel !== option.label && "invisible")}>&#10003;</span>
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              {SORT_OPTIONS.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => {
+                    setSortLabel(option.label);
+                    setSortValue(option.value);
+                    setSortOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg-alt)]"
+                >
+                  <span className={cn("w-4", sortLabel !== option.label && "invisible")}>&#10003;</span>
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -137,7 +155,7 @@ export default function CollectionToolbar({ products, refineOptions }) {
               aria-label="Comfortable grid view"
               aria-pressed={!dense}
               className={cn(
-                "flex h-8 w-8 items-center justify-center border border-[var(--color-line)] transition-colors",
+                "flex h-8 w-8 cursor-pointer items-center justify-center border border-[var(--color-line)] transition-colors",
                 !dense ? "border-[var(--color-text)] text-[var(--color-text)]" : "text-[var(--color-text-muted)]",
               )}
             >
@@ -149,7 +167,7 @@ export default function CollectionToolbar({ products, refineOptions }) {
               aria-label="Compact grid view"
               aria-pressed={dense}
               className={cn(
-                "flex h-8 w-8 items-center justify-center border border-[var(--color-line)] transition-colors",
+                "flex h-8 w-8 cursor-pointer items-center justify-center border border-[var(--color-line)] transition-colors",
                 dense ? "border-[var(--color-text)] text-[var(--color-text)]" : "text-[var(--color-text-muted)]",
               )}
             >
