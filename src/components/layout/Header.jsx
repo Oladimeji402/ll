@@ -8,7 +8,7 @@ import { useScrollPosition } from "@/hooks/useScrollPosition";
 import MobileMenu from "./MobileMenu";
 
 export default function Header() {
-  const { scrolled, direction } = useScrollPosition(40);
+  const { scrolled } = useScrollPosition(40);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const visibleLinks = siteConfig.navLinks.slice(0, siteConfig.navVisibleCount);
@@ -20,20 +20,19 @@ export default function Header() {
         className={cn(
           "header-shell sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-bg)]",
           scrolled && "shadow-[0_4px_16px_rgba(0,0,0,0.06)]",
-          direction === "down" && scrolled ? "-translate-y-full" : "translate-y-0",
         )}
       >
         <div
           className={cn(
-            "mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-5 transition-[padding] duration-300",
-            scrolled ? "py-3" : "py-5",
+            "relative mx-auto flex max-w-7xl items-center px-5 transition-[padding] duration-300",
+            scrolled ? "pt-3 pb-1" : "pt-5 pb-2",
           )}
         >
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex flex-col gap-[5px] justify-self-start md:hidden"
+            className="flex flex-col gap-[5px] md:hidden"
           >
             <span className="h-px w-6 bg-[var(--color-text)]" />
             <span className="h-px w-6 bg-[var(--color-text)]" />
@@ -43,7 +42,7 @@ export default function Header() {
           <Link
             href="/"
             className={cn(
-              "font-serif flex items-center gap-3 justify-self-center tracking-[0.2em] text-[var(--color-primary)] transition-[font-size] duration-300",
+              "font-serif absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 tracking-[0.2em] text-[var(--color-primary)] transition-[font-size] duration-300",
               scrolled ? "text-2xl" : "text-3xl md:text-4xl",
             )}
           >
@@ -51,7 +50,7 @@ export default function Header() {
             {siteConfig.brandName}
           </Link>
 
-          <div className="flex items-center justify-self-end gap-4 text-[var(--color-text)]">
+          <div className="ml-auto flex items-center gap-4 text-[var(--color-text)]">
             <IconButton label="Search">
               <SearchIcon />
             </IconButton>
@@ -64,7 +63,7 @@ export default function Header() {
           </div>
         </div>
 
-        <nav className="hidden justify-center gap-7 px-5 py-3 md:flex">
+        <nav className="hidden justify-center gap-7 px-5 pb-3 md:flex">
           {visibleLinks.map((link) => (
             <a
               key={link}
