@@ -16,7 +16,7 @@ export default function CategoryBanner() {
           />
           <Link
             href={panel.href}
-            className="tracking-nav absolute bottom-8 left-8 border border-[var(--color-text)] bg-[var(--color-surface)]/95 px-6 py-3 text-xs uppercase text-[var(--color-text)] backdrop-blur-sm transition-colors hover:bg-[var(--color-text)] hover:text-[var(--color-surface)]"
+            className="tracking-nav absolute bottom-8 left-8 border border-[var(--color-surface)] px-6 py-3 text-xs uppercase text-[var(--color-surface)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
           >
             {panel.label}
           </Link>
