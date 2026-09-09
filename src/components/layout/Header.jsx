@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, slugify } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
 import { getAllProducts } from "@/data/products";
@@ -75,13 +75,13 @@ export default function Header() {
 
         <nav className="hidden justify-center gap-7 px-5 pb-3 md:flex">
           {siteConfig.navLinks.map((link) => (
-            <a
+            <Link
               key={link}
-              href="#"
+              href={`/collections/${slugify(link)}`}
               className="tracking-nav whitespace-nowrap text-[11px] uppercase text-[var(--color-primary)] transition-colors hover:text-[var(--color-primary-dark)]"
             >
               {link}
-            </a>
+            </Link>
           ))}
         </nav>
       </header>

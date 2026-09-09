@@ -7,9 +7,9 @@ export default function Hero() {
   const ctaIndex = Math.floor(panels.length / 2);
 
   return (
-    <section className="relative grid h-[70vh] min-h-[420px] grid-cols-3">
+    <section className="relative grid grid-cols-1 sm:grid-cols-3 sm:h-[70vh] sm:min-h-[420px]">
       {panels.map((panel, i) => (
-        <div key={i} className="group relative h-full overflow-hidden">
+        <div key={i} className="group relative aspect-[3/4] overflow-hidden sm:aspect-auto sm:h-full">
           {/* Default: front-facing shot */}
           <PlaceholderImage
             tone={panel.tone}

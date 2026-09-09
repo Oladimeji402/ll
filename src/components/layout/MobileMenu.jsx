@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { cn, slugify } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 
 export default function MobileMenu({ open, onClose }) {
@@ -42,14 +43,14 @@ export default function MobileMenu({ open, onClose }) {
 
         <nav className="flex flex-col px-6 py-6">
           {siteConfig.navLinks.map((link) => (
-            <a
+            <Link
               key={link}
-              href="#"
+              href={`/collections/${slugify(link)}`}
               onClick={onClose}
               className="tracking-nav border-b border-[var(--color-line)] py-4 text-xs uppercase text-[var(--color-primary)] transition-colors hover:text-[var(--color-primary-dark)]"
             >
               {link}
-            </a>
+            </Link>
           ))}
         </nav>
       </div>

@@ -9,11 +9,9 @@
  * the product detail page renders.
  */
 
-const SIZES = ["S", "M", "L"];
+import { slugify } from "@/lib/utils";
 
-function slugify(name) {
-  return name.toLowerCase().replace(/\s+/g, "-");
-}
+const SIZES = ["S", "M", "L"];
 
 function makeProducts(count, namePrefix, offset = 0, toneCount = 5) {
   return Array.from({ length: count }, (_, i) => {

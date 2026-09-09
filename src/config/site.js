@@ -144,6 +144,30 @@ export const siteConfig = {
     },
   },
 
+  // ---- Testimonial carousel (used on collection pages) -----------------------
+  testimonials: {
+    heading: "Customers Are Saying",
+    rating: 4.87,
+    count: 22,
+    reviews: [
+      {
+        text: "Nice Fabric & Style",
+        rating: 5,
+        name: "Anonymous",
+      },
+      {
+        text: "The piece is a very nice and stylish outfit. I get compliments every time I wear it.",
+        rating: 5,
+        name: "Amara Johnson",
+      },
+      {
+        text: "Great quality fabric and the fit was true to size. Will definitely order again.",
+        rating: 4,
+        name: "Chidinma Okafor",
+      },
+    ],
+  },
+
   // ---- Floating UI ------------------------------------------------------------
   discountBadge: "Up to 10% OFF",
   chatBubbleLabel: "Chat with us",

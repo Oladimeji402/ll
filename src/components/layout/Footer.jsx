@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { slugify } from "@/lib/utils";
 import Reveal from "@/components/ui/Reveal";
 
 export default function Footer() {
@@ -60,12 +62,21 @@ export default function Footer() {
             <ul className="mt-3 flex flex-col gap-2 sm:mt-4 sm:gap-3">
               {col.links.map((link) => (
                 <li key={link}>
-                  <a
-                    href="#"
-                    className="text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)]"
-                  >
-                    {link}
-                  </a>
+                  {col.heading === "Shop" ? (
+                    <Link
+                      href={`/collections/${slugify(link)}`}
+                      className="text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)]"
+                    >
+                      {link}
+                    </Link>
+                  ) : (
+                    <a
+                      href="#"
+                      className="text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)]"
+                    >
+                      {link}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
