@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   THEME TOKENS — this is the color/typography system for the whole site.
+   Swap these values to retheme the clone for a different brand. Everything
+   below (components, utility classes) reads from these variables.
+   ========================================================================== */
+:root {
+  /* Backgrounds */
+  --color-bg: #f6f1e8;
+  --color-bg-alt: #efe6d6;
+  --color-surface: #ffffff;
+
+  /* Brand */
+  --color-primary: #6b2737; /* deep maroon — logo, headings, prices */
+  --color-primary-dark: #4a1b27;
+  --color-accent: #c48793; /* dusty rose — decorative accents */
+
+  /* Text */
+  --color-text: #241c1a;
+  --color-text-muted: #6b5f56;
+  --color-on-primary: #f6f1e8;
+
+  /* Lines / surfaces */
+  --color-line: #e3d9c7;
+  --color-image-bg: #e8e2d4;
+
+  /* Placeholder image palette (product & hero placeholders cycle through these) */
+  --tone-0: #ded0c3;
+  --tone-1: #d8c3ae;
+  --tone-2: #c9b7a3;
+  --tone-3: #b9a89a;
+  --tone-4: #e3cdb8;
+
+  /* Type */
+  --font-serif: Georgia, "Times New Roman", Times, serif;
+  --font-sans:
+    "Helvetica Neue", Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --header-height: 128px;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-alt: var(--color-bg-alt);
+  --color-surface: var(--color-surface);
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-accent: var(--color-accent);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-on-primary: var(--color-on-primary);
+  --color-line: var(--color-line);
+  --color-image-bg: var(--color-image-bg);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* ==========================================================================
+   Shared utility classes
+   ========================================================================== */
+.tracking-nav {
+  letter-spacing: 0.12em;
+}
+
+/* ==========================================================================
+   Marquee — seamless infinite horizontal scroll
+   ========================================================================== */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee-scroll 22s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Scroll reveal — used by <Reveal> client component
+   ========================================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Header shrink transition (height/font handled with Tailwind, this just
+   smooths the border/shadow appearance)
+   ========================================================================== */
+.header-shell {
+  transition:
+    box-shadow 0.35s ease,
+    transform 0.35s ease,
+    padding 0.35s ease;
+}
