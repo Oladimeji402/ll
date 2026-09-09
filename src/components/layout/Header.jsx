@@ -48,15 +48,15 @@ export default function Header() {
           <Link
             href="/"
             className={cn(
-              "font-serif absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 tracking-[0.2em] text-[var(--color-primary)] transition-[font-size] duration-300",
-              scrolled ? "text-2xl" : "text-3xl md:text-4xl",
+              "font-serif absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap tracking-[0.02em] text-[var(--color-primary)] transition-[font-size] duration-300 sm:gap-3 sm:tracking-[0.2em]",
+              scrolled ? "text-sm sm:text-2xl" : "text-base sm:text-3xl md:text-4xl",
             )}
           >
-            <span aria-hidden className="h-[0.7em] w-px bg-[var(--color-primary)]" />
+            <span aria-hidden className="hidden h-[0.7em] w-px bg-[var(--color-primary)] sm:block" />
             {siteConfig.brandName}
           </Link>
 
-          <div className="ml-auto flex items-center gap-4 text-[var(--color-text)]">
+          <div className="ml-auto flex items-center gap-2 text-[var(--color-text)] sm:gap-4">
             <IconButton label="Search" onClick={() => setSearchOpen(true)}>
               <SearchIcon />
             </IconButton>
@@ -100,7 +100,10 @@ function IconButton({ children, label, className, onClick }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={cn("-m-2 inline-flex cursor-pointer items-center justify-center p-2", className)}
+      className={cn(
+        "-m-1.5 inline-flex cursor-pointer items-center justify-center p-1.5 sm:-m-2 sm:p-2",
+        className,
+      )}
     >
       {children}
     </button>

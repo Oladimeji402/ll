@@ -9,8 +9,8 @@
 
 export const siteConfig = {
   // ---- Brand --------------------------------------------------------------
-  brandName: "LL",
-  metaTitle: "LL — Contemporary Ready-to-Wear",
+  brandName: "LL COLLECTIONS",
+  metaTitle: "LL COLLECTIONS — Contemporary Ready-to-Wear",
   metaDescription:
     "Placeholder storefront for a contemporary clothing brand. Replace this copy, the images, and the colors to launch your client's site.",
 
@@ -107,7 +107,7 @@ export const siteConfig = {
     faqHeading: "Frequently Asked Questions",
     faq: [
       {
-        question: "What can I buy from LL?",
+        question: "What can I buy from LL Collections?",
         answer:
           "Placeholder answer — describe your product range here: ready-to-wear, accessories, made-to-order pieces, and more.",
       },
@@ -204,7 +204,7 @@ export const siteConfig = {
     assistantName: "Aria",
     assistantRole: "AI Assistant",
     greeting: [
-      "Hi 👋 Welcome to LL!",
+      "Hi 👋 Welcome to LL Collections!",
       "Looking for something specific or need help with your order? We're here to help. 💬",
       "Tell us what you need, and we'll be happy to assist you.",
     ],
@@ -233,6 +233,6 @@ export const siteConfig = {
       },
     ],
     social: ["Instagram", "TikTok", "Pinterest"],
-    copyrightHolder: "LL",
+    copyrightHolder: "LL Collections",
   },
 };
