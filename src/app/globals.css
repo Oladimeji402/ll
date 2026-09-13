@@ -39,6 +39,33 @@
     BlinkMacSystemFont, sans-serif;
 
   --header-height: 128px;
+
+  /* ------------------------------------------------------------------
+     Admin panel tokens — additive only, storefront never reads these.
+     Derived from the brand palette above so the admin reads as the same
+     brand, just denser and operational rather than editorial.
+     ------------------------------------------------------------------ */
+  --admin-sidebar-bg: #371323;
+  --admin-sidebar-fg: #f6f1e8;
+  --admin-sidebar-fg-muted: #cdb6ab;
+  --admin-sidebar-border: rgba(246, 241, 232, 0.1);
+  --admin-sidebar-active: rgba(246, 241, 232, 0.08);
+
+  --admin-bg: #f6f1e8;
+  --admin-surface: #ffffff;
+  --admin-surface-alt: #efe6d6;
+  --admin-border: #e3d9c7;
+  --admin-text: #241c1a;
+  --admin-text-muted: #6b5f56;
+
+  --admin-success: #4c5c3a;
+  --admin-success-bg: #eaeee1;
+  --admin-warning: #8a5a20;
+  --admin-warning-bg: #f5e9d6;
+  --admin-danger: #8c3324;
+  --admin-danger-bg: #f4e2dd;
+  --admin-info: #3c5568;
+  --admin-info-bg: #e4ebf0;
 }
 
 @theme inline {
@@ -142,4 +169,28 @@ body {
     box-shadow 0.35s ease,
     transform 0.35s ease,
     padding 0.35s ease;
+}
+
+/* ==========================================================================
+   Admin — skeleton shimmer
+   ========================================================================== */
+@keyframes admin-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.admin-skeleton {
+  animation: admin-skeleton-pulse 1.6s ease-in-out infinite;
+  background-color: var(--admin-surface-alt);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-skeleton {
+    animation: none;
+  }
 }
