@@ -9,24 +9,28 @@ import CategoryFavorites from "@/components/sections/CategoryFavorites";
 import TrustBadges from "@/components/sections/TrustBadges";
 import Faq from "@/components/sections/Faq";
 import TestimonialCarousel from "@/components/sections/TestimonialCarousel";
-import { getAllCategories, getCategoryBySlug } from "@/data/categories";
+import { getAllCollections, getCollectionBySlug } from "@/lib/supabase/queries/catalog";
+import { getCollectionMarketingContent } from "@/lib/collection-content";
 import { siteConfig } from "@/config/site";
 
-export function generateStaticParams() {
-  return getAllCategories().map((category) => ({ slug: category.slug }));
+export async function generateStaticParams() {
+  const collections = await getAllCollections();
+  return collections.map((collection) => ({ slug: collection.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
-  if (!category) return {};
-  return { title: `${category.title} — ${siteConfig.brandName}` };
+  const collection = await getCollectionBySlug(slug);
+  if (!collection) return {};
+  return { title: `${collection.title} — ${siteConfig.brandName}` };
 }
 
 export default async function CollectionPage({ params }) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
-  if (!category) notFound();
+  const collection = await getCollectionBySlug(slug);
+  if (!collection) notFound();
+
+  const category = { ...collection, ...getCollectionMarketingContent(collection.title) };
 
   return (
     <>

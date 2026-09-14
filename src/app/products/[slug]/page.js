@@ -9,25 +9,26 @@ import RelatedProducts from "@/components/sections/RelatedProducts";
 import CustomerReviews from "@/components/sections/CustomerReviews";
 import TrustBadges from "@/components/sections/TrustBadges";
 import Faq from "@/components/sections/Faq";
-import { getAllProducts, getProductBySlug, getRelatedProducts } from "@/data/products";
+import { getAllProducts, getProductBySlug, getRelatedProducts } from "@/lib/supabase/queries/catalog";
 
-export function generateStaticParams() {
-  return getAllProducts().map((product) => ({ slug: product.slug }));
+export async function generateStaticParams() {
+  const products = await getAllProducts();
+  return products.map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return {};
   return { title: `${product.name} — ${product.name}` };
 }
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const related = getRelatedProducts(product);
+  const related = await getRelatedProducts(product);
 
   return (
     <>

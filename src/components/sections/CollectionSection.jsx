@@ -2,14 +2,14 @@ import Reveal from "@/components/ui/Reveal";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/ui/ProductCard";
 
-export default function CollectionSection({ id, title, products }) {
+export default function CollectionSection({ id, slug, title, products }) {
   return (
     <section id={id} className="mx-auto max-w-7xl px-5 py-14 sm:py-20">
       <Reveal as="div" className="mb-10 flex flex-col items-center gap-6 text-center">
         <h2 className="font-serif text-3xl text-[var(--color-primary)] sm:text-4xl">
           {title}
         </h2>
-        <Button href="#" variant="outline">
+        <Button href={`/collections/${slug}`} variant="outline">
           View All
         </Button>
       </Reveal>

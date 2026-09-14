@@ -1,30 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn, slugify } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
 import { useMounted } from "@/hooks/useMounted";
-import { getAllProducts } from "@/data/products";
 import { useCartStore, useCartCount } from "@/lib/store/cart-store";
 import MobileMenu from "./MobileMenu";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "./CartDrawer";
 import AccountModal from "./AccountModal";
 
-const searchPicks = getAllProducts().slice(0, 4);
-
 export default function Header() {
   const { scrolled } = useScrollPosition(40);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [searchPicks, setSearchPicks] = useState([]);
   const cartOpen = useCartStore((s) => s.open);
   const openCart = useCartStore((s) => s.openCart);
   const closeCart = useCartStore((s) => s.closeCart);
   const cartCount = useCartCount();
   const mounted = useMounted();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/catalog/products?limit=4")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setSearchPicks(data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>

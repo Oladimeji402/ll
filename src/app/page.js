@@ -10,10 +10,11 @@ import CollectionSection from "@/components/sections/CollectionSection";
 import CategoryBanner from "@/components/sections/CategoryBanner";
 import TrendingStyles from "@/components/sections/TrendingStyles";
 import TrustBadges from "@/components/sections/TrustBadges";
-import { collections, getAllProducts } from "@/data/products";
+import { getAllProducts, getHomepageSections } from "@/lib/supabase/queries/catalog";
 
-export default function Home() {
-  const trendingProducts = getAllProducts().slice(8, 16);
+export default async function Home() {
+  const [allProducts, sections] = await Promise.all([getAllProducts(), getHomepageSections()]);
+  const trendingProducts = allProducts.slice(8, 16);
 
   return (
     <>
@@ -25,12 +26,13 @@ export default function Home() {
         <Story />
         <CategoryShowcase />
 
-        {collections.map((collection) => (
+        {sections.map((section) => (
           <CollectionSection
-            key={collection.id}
-            id={collection.id}
-            title={collection.title}
-            products={collection.products}
+            key={section.id}
+            id={section.id}
+            slug={section.slug}
+            title={section.title}
+            products={section.products}
           />
         ))}
 

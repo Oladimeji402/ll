@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import PlaceholderImage from "./PlaceholderImage";
-import { formatPrice } from "@/data/products";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 
 export default function ProductCard({ product, theme = "light" }) {

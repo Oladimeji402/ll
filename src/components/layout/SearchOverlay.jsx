@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { formatPrice } from "@/data/products";
+import { cn, formatPrice } from "@/lib/utils";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
 
 export default function SearchOverlay({ open, onClose, products }) {

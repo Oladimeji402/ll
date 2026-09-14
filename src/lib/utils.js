@@ -9,3 +9,7 @@ export function slugify(str) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
+
+export function formatPrice(amount) {
+  return `₦${amount.toLocaleString("en-NG")}`;
+}

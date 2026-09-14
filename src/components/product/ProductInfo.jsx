@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { formatPrice } from "@/data/products";
 import { siteConfig } from "@/config/site";
 import Accordion from "@/components/ui/Accordion";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 
 export default function ProductInfo({ product }) {

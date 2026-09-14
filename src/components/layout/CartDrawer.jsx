@@ -1,7 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { formatPrice } from "@/data/products";
+import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore, useCartSubtotal } from "@/lib/store/cart-store";
 import { useMounted } from "@/hooks/useMounted";
 import Button from "@/components/ui/Button";

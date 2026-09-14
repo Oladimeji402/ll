@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import { getAllCategories } from "@/data/categories";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
 
 const TABS = [
@@ -14,11 +13,22 @@ const TABS = [
   { id: "account", label: "Account", Icon: AccountIcon },
 ];
 
-const featuredCategory = getAllCategories()[0];
-
 export default function ChatPanel({ open, onClose }) {
   const [tab, setTab] = useState("chat");
+  const [featuredCategory, setFeaturedCategory] = useState(null);
   const { heading } = siteConfig.chat;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/catalog/collections")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setFeaturedCategory(data[0] ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div
@@ -58,7 +68,7 @@ export default function ChatPanel({ open, onClose }) {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {tab === "home" ? <HomeTab /> : null}
+          {tab === "home" ? <HomeTab featuredCategory={featuredCategory} /> : null}
           {tab === "orders" ? <SignInTab heading={siteConfig.chat.orders.heading} /> : null}
           {tab === "chat" ? <ChatTab /> : null}
           {tab === "account" ? <SignInTab heading={siteConfig.chat.account.heading} /> : null}
@@ -106,7 +116,7 @@ function EmailSignInForm() {
   );
 }
 
-function HomeTab() {
+function HomeTab({ featuredCategory }) {
   return (
     <div className="flex flex-col gap-6 px-6 py-6">
       <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">
