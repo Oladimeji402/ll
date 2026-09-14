@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { cn, formatPrice } from "@/lib/utils";
 import { useCartStore, useCartSubtotal } from "@/lib/store/cart-store";
 import { useMounted } from "@/hooks/useMounted";
@@ -124,14 +125,13 @@ export default function CartDrawer({ open, onClose }) {
               </div>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">Shipping and taxes calculated at checkout.</p>
 
-              <button
-                type="button"
-                disabled
-                title="Checkout is coming soon"
-                className="tracking-nav mt-4 w-full cursor-not-allowed bg-[var(--color-primary)]/50 py-4 text-xs uppercase text-[var(--color-on-primary)]"
+              <Link
+                href="/checkout"
+                onClick={onClose}
+                className="tracking-nav mt-4 block w-full bg-[var(--color-primary)] py-4 text-center text-xs uppercase text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)]"
               >
-                Checkout — Coming Soon
-              </button>
+                Checkout
+              </Link>
             </div>
           </>
         )}

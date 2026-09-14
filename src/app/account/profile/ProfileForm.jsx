@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { cn } from "@/lib/utils";
 import { updateProfile } from "./actions";
-import SearchableSelect from "./SearchableSelect";
+import SearchableSelect from "@/components/ui/SearchableSelect";
+import { useNigeriaStates, useNigeriaCities } from "@/hooks/useNigeriaGeo";
 
 function Field({ label, className, ...rest }) {
   return (
@@ -21,38 +22,10 @@ export default function ProfileForm({ customer }) {
   const [formState, action, pending] = useActionState(updateProfile, undefined);
   const address = customer.address ?? {};
 
-  const [stateOptions, setStateOptions] = useState([]);
-  const [cityOptions, setCityOptions] = useState([]);
   const [stateValue, setStateValue] = useState(address.state ?? "");
   const [cityValue, setCityValue] = useState(address.city ?? "");
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/geo/states")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled) setStateOptions(data);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!stateValue) {
-      setCityOptions([]);
-      return;
-    }
-    let cancelled = false;
-    fetch(`/api/geo/lgas?state=${encodeURIComponent(stateValue)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled) setCityOptions(data.map((lga) => ({ value: lga, label: lga })));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [stateValue]);
+  const stateOptions = useNigeriaStates();
+  const cityOptions = useNigeriaCities(stateValue);
 
   return (
     <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">

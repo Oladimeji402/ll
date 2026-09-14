@@ -45,6 +45,7 @@ export const useCartStore = create(
               ...state.items,
               {
                 id,
+                productId: product.id,
                 slug: product.slug,
                 name: product.name,
                 price: product.price,
