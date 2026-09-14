@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn, slugify } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
@@ -46,8 +47,10 @@ export default function Header() {
       >
         <div
           className={cn(
-            "relative mx-auto flex max-w-7xl items-center px-5 transition-[padding] duration-300",
-            scrolled ? "pt-3 pb-1" : "pt-5 pb-2",
+            "relative mx-auto flex max-w-7xl items-center px-5 transition-[padding,min-height] duration-300",
+            scrolled
+              ? "min-h-14 pt-2 pb-2 sm:min-h-16"
+              : "min-h-16 pt-3 pb-3 sm:min-h-[88px] md:min-h-[104px]",
           )}
         >
           <button
@@ -63,13 +66,31 @@ export default function Header() {
 
           <Link
             href="/"
-            className={cn(
-              "font-serif absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 whitespace-nowrap tracking-[0.02em] text-[var(--color-primary)] transition-[font-size] duration-300 sm:gap-3 sm:tracking-[0.2em]",
-              scrolled ? "text-sm sm:text-2xl" : "text-base sm:text-3xl md:text-4xl",
-            )}
+            aria-label={siteConfig.brandName}
+            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center transition-[height] duration-300"
           >
-            <span aria-hidden className="hidden h-[0.7em] w-px bg-[var(--color-primary)] sm:block" />
-            {siteConfig.brandName}
+            <Image
+              src="/logo/ll-mobile-logo.png"
+              alt={siteConfig.brandName}
+              width={689}
+              height={351}
+              priority
+              className={cn(
+                "w-auto object-contain transition-[height] duration-300 sm:hidden",
+                scrolled ? "h-10" : "h-12",
+              )}
+            />
+            <Image
+              src="/logo/ll-desktop-logo.png"
+              alt={siteConfig.brandName}
+              width={1011}
+              height={227}
+              priority
+              className={cn(
+                "hidden w-auto object-contain transition-[height] duration-300 sm:block",
+                scrolled ? "h-12" : "h-16 md:h-20",
+              )}
+            />
           </Link>
 
           <div className="ml-auto flex items-center gap-2 text-[var(--color-text)] sm:gap-4">
