@@ -1,6 +1,4 @@
 import { redirect } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/config/site";
 import ProfileForm from "./ProfileForm";
@@ -27,19 +25,13 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <>
-      <Header />
+    <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-20 pt-16 sm:pt-20">
+      <h1 className="font-serif text-3xl text-[var(--color-primary)] sm:text-4xl">My Profile</h1>
+      <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+        Update your contact details and default shipping address.
+      </p>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-20 pt-16 sm:pt-20">
-        <h1 className="font-serif text-3xl text-[var(--color-primary)] sm:text-4xl">My Profile</h1>
-        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-          Update your contact details and default shipping address.
-        </p>
-
-        <ProfileForm customer={customer ?? { name: "", email: user.email, phone: "", address: {} }} />
-      </main>
-
-      <Footer />
-    </>
+      <ProfileForm customer={customer ?? { name: "", email: user.email, phone: "", address: {} }} />
+    </main>
   );
 }

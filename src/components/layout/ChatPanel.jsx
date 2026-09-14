@@ -84,9 +84,9 @@ export default function ChatPanel({ open, onClose }) {
               onClick={() => setTab(id)}
               aria-pressed={tab === id}
               className={cn(
-                "flex flex-col items-center gap-1 text-[var(--color-text-muted)] transition-colors",
+                "flex flex-col items-center gap-1 rounded-lg py-1.5 text-[var(--color-text-muted)] transition-colors",
                 disabled ? "cursor-not-allowed opacity-40" : "hover:text-[var(--color-primary)]",
-                tab === id && "text-[var(--color-primary)]",
+                tab === id && "bg-[var(--color-bg-alt)] text-[var(--color-primary)]",
               )}
             >
               <Icon />

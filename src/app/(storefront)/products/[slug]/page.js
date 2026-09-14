@@ -1,8 +1,4 @@
 import { notFound } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import FloatingBadge from "@/components/layout/FloatingBadge";
-import ChatBubble from "@/components/layout/ChatBubble";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import RelatedProducts from "@/components/sections/RelatedProducts";
@@ -32,25 +28,16 @@ export default async function ProductPage({ params }) {
   const [related, reviews] = await Promise.all([getRelatedProducts(product), getProductReviews(product.id)]);
 
   return (
-    <>
-      <Header />
+    <main className="flex-1">
+      <div className="grid lg:grid-cols-2">
+        <ProductGallery product={product} />
+        <ProductInfo product={product} />
+      </div>
 
-      <main className="flex-1">
-        <div className="grid lg:grid-cols-2">
-          <ProductGallery product={product} />
-          <ProductInfo product={product} />
-        </div>
-
-        <RelatedProducts products={related} />
-        <CustomerReviews product={product} reviews={reviews} />
-        <TrustBadges />
-        <Faq />
-      </main>
-
-      <Footer />
-
-      <FloatingBadge />
-      <ChatBubble />
-    </>
+      <RelatedProducts products={related} />
+      <CustomerReviews product={product} reviews={reviews} />
+      <TrustBadges />
+      <Faq />
+    </main>
   );
 }

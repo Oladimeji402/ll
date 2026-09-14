@@ -1,4 +1,11 @@
+import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
+
+// Public catalog data (products/collections) rarely changes and carries no
+// per-user state, so it's cached across requests via Next's Data Cache —
+// short revalidate window as a safety net, plus tags for on-demand
+// invalidation once something (e.g. the admin panel) can trigger it.
+const REVALIDATE_SECONDS = 60;
 
 function mapProduct(row) {
   return {
@@ -24,7 +31,7 @@ function mapCollection(row) {
   };
 }
 
-export async function getAllProducts() {
+async function fetchAllProducts() {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
@@ -36,12 +43,19 @@ export async function getAllProducts() {
   return data.map(mapProduct);
 }
 
+export const getAllProducts = unstable_cache(fetchAllProducts, ["catalog", "products", "all"], {
+  tags: ["products"],
+  revalidate: REVALIDATE_SECONDS,
+});
+
 export async function searchProducts(query, limit = 8) {
   // Strip characters meaningful to PostgREST's or=(...) filter grammar so a
   // typed comma/paren can't reshape the query instead of just matching text.
   const term = query.replace(/[,()*]/g, " ").trim();
   if (!term) return [];
 
+  // User-driven search terms aren't cached — unbounded key space, and
+  // results should reflect the catalog as of right now.
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
@@ -55,7 +69,7 @@ export async function searchProducts(query, limit = 8) {
   return data.map(mapProduct);
 }
 
-export async function getProductBySlug(slug) {
+async function fetchProductBySlug(slug) {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
@@ -68,13 +82,18 @@ export async function getProductBySlug(slug) {
   return data ? mapProduct(data) : null;
 }
 
-export async function getRelatedProducts(product, count = 4) {
+export const getProductBySlug = unstable_cache(fetchProductBySlug, ["catalog", "products", "by-slug"], {
+  tags: ["products"],
+  revalidate: REVALIDATE_SECONDS,
+});
+
+async function fetchRelatedProducts(slug, count) {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select("*")
     .eq("status", "active")
-    .neq("slug", product.slug)
+    .neq("slug", slug)
     .order("created_at", { ascending: true })
     .limit(count);
 
@@ -82,7 +101,16 @@ export async function getRelatedProducts(product, count = 4) {
   return data.map(mapProduct);
 }
 
-export async function getAllCollections() {
+const getRelatedProductsCached = unstable_cache(fetchRelatedProducts, ["catalog", "products", "related"], {
+  tags: ["products"],
+  revalidate: REVALIDATE_SECONDS,
+});
+
+export function getRelatedProducts(product, count = 4) {
+  return getRelatedProductsCached(product.slug, count);
+}
+
+async function fetchAllCollections() {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("collections")
@@ -94,7 +122,12 @@ export async function getAllCollections() {
   return data.map(mapCollection);
 }
 
-export async function getCollectionBySlug(slug) {
+export const getAllCollections = unstable_cache(fetchAllCollections, ["catalog", "collections", "all"], {
+  tags: ["collections"],
+  revalidate: REVALIDATE_SECONDS,
+});
+
+async function fetchCollectionBySlug(slug) {
   const supabase = createPublicClient();
   const { data: collectionRow, error: collectionError } = await supabase
     .from("collections")
@@ -120,6 +153,11 @@ export async function getCollectionBySlug(slug) {
 
   return { ...mapCollection(collectionRow), products };
 }
+
+export const getCollectionBySlug = unstable_cache(fetchCollectionBySlug, ["catalog", "collections", "by-slug"], {
+  tags: ["collections", "products"],
+  revalidate: REVALIDATE_SECONDS,
+});
 
 // The 3 curated homepage sections — mapped positionally onto fixed anchor
 // ids the Hero CTA already links to (#collection-new etc).

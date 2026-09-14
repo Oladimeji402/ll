@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
-import { createClient } from "@/lib/supabase/client";
+import { submitReview } from "@/app/(storefront)/products/[slug]/actions";
 
 export default function WriteReviewModal({ open, onClose, onSubmitted, product }) {
   const [step, setStep] = useState("rate");
@@ -42,18 +42,11 @@ export default function WriteReviewModal({ open, onClose, onSubmitted, product }
     setError("");
     setPending(true);
 
-    const supabase = createClient();
-    const { error: insertError } = await supabase.from("reviews").insert({
-      product_id: product.id,
-      rating,
-      author_name: form.name,
-      author_email: form.email,
-      body: form.body,
-    });
+    const result = await submitReview(product.id, { rating, name: form.name, email: form.email, body: form.body });
 
     setPending(false);
-    if (insertError) {
-      setError("Couldn't submit your review. Please try again.");
+    if (result.error) {
+      setError(result.error);
       return;
     }
 

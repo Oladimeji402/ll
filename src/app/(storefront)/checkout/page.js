@@ -1,5 +1,3 @@
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/config/site";
 import CheckoutForm from "./CheckoutForm";
@@ -27,18 +25,12 @@ export default async function CheckoutPage() {
   }
 
   return (
-    <>
-      <Header />
+    <main className="mx-auto w-full max-w-5xl flex-1 px-5 pb-20 pt-16 sm:pt-20">
+      <h1 className="mb-10 text-center font-serif text-3xl text-[var(--color-primary)] sm:text-4xl">
+        Checkout
+      </h1>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-5 pb-20 pt-16 sm:pt-20">
-        <h1 className="mb-10 text-center font-serif text-3xl text-[var(--color-primary)] sm:text-4xl">
-          Checkout
-        </h1>
-
-        {customer ? <CheckoutForm customer={customer} /> : <CheckoutSignIn />}
-      </main>
-
-      <Footer />
-    </>
+      {customer ? <CheckoutForm customer={customer} /> : <CheckoutSignIn />}
+    </main>
   );
 }
