@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Settings, ExternalLink } from "lucide-react";
-import { CURRENT_STAFF } from "@/lib/admin/utils/current-user";
-import { avatarColor, initials } from "@/lib/admin/utils/avatar";
+import { Settings, ExternalLink, LogOut } from "lucide-react";
+import { useCurrentStaff } from "./CurrentStaffContext";
+import { avatarColor, initials, toneFromString } from "@/lib/admin/utils/avatar";
+import { signOutStaff } from "@/app/admin/login/actions";
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const staff = useCurrentStaff();
 
   useEffect(() => {
     function handleClick(event) {
@@ -23,18 +25,18 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={`Account menu for ${CURRENT_STAFF.name}`}
+        aria-label={`Account menu for ${staff.name}`}
         className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium text-white"
-        style={{ backgroundColor: avatarColor(CURRENT_STAFF.tone) }}
+        style={{ backgroundColor: avatarColor(toneFromString(staff.email)) }}
       >
-        {initials(CURRENT_STAFF.name)}
+        {initials(staff.name)}
       </button>
 
       {open && (
         <div className="absolute right-0 z-30 mt-2 w-56 border border-[var(--admin-border)] bg-[var(--admin-surface)] py-1.5 shadow-lg">
           <div className="border-b border-[var(--admin-border)] px-4 py-3">
-            <p className="truncate text-sm font-medium text-[var(--admin-text)]">{CURRENT_STAFF.name}</p>
-            <p className="truncate text-xs text-[var(--admin-text-muted)]">{CURRENT_STAFF.email}</p>
+            <p className="truncate text-sm font-medium text-[var(--admin-text)]">{staff.name}</p>
+            <p className="truncate text-xs text-[var(--admin-text-muted)]">{staff.email}</p>
           </div>
           <Link
             href="/admin/settings/preferences"
@@ -53,6 +55,15 @@ export default function UserMenu() {
             <ExternalLink className="h-4 w-4 text-[var(--admin-text-muted)]" />
             View Store
           </Link>
+          <form action={signOutStaff} className="border-t border-[var(--admin-border)]">
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-[var(--admin-text)] hover:bg-[var(--admin-surface-alt)]"
+            >
+              <LogOut className="h-4 w-4 text-[var(--admin-text-muted)]" />
+              Sign Out
+            </button>
+          </form>
         </div>
       )}
     </div>

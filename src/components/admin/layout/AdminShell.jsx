@@ -6,8 +6,9 @@ import Topbar from "./Topbar";
 import MobileNav from "./MobileNav";
 import CommandPalette from "./CommandPalette";
 import { ToastProvider } from "../ui/Toast";
+import { CurrentStaffProvider } from "./CurrentStaffContext";
 
-export default function AdminShell({ children }) {
+export default function AdminShell({ children, staff }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -27,16 +28,18 @@ export default function AdminShell({ children }) {
   }, []);
 
   return (
-    <ToastProvider>
-      <div className="flex min-h-screen bg-[var(--admin-bg)] font-sans text-[var(--admin-text)]">
-        <Sidebar />
-        <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col">
-          <Topbar onOpenMobileNav={() => setMobileNavOpen(true)} onOpenSearch={openSearch} />
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+    <CurrentStaffProvider staff={staff}>
+      <ToastProvider>
+        <div className="flex min-h-screen bg-[var(--admin-bg)] font-sans text-[var(--admin-text)]">
+          <Sidebar />
+          <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col">
+            <Topbar onOpenMobileNav={() => setMobileNavOpen(true)} onOpenSearch={openSearch} />
+            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+          </div>
         </div>
-      </div>
-      <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-      <CommandPalette open={searchOpen} onClose={closeSearch} />
-    </ToastProvider>
+        <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+        <CommandPalette open={searchOpen} onClose={closeSearch} />
+      </ToastProvider>
+    </CurrentStaffProvider>
   );
 }

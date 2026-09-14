@@ -15,7 +15,7 @@ import EmptyState from "@/components/admin/ui/EmptyState";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
 import { formatCurrency, formatDate } from "@/lib/admin/utils/format";
-import { CURRENT_STAFF } from "@/lib/admin/utils/current-user";
+import { useCurrentStaff } from "@/components/admin/layout/CurrentStaffContext";
 import {
   getDashboardMetrics,
   getSalesSeries,
@@ -38,6 +38,7 @@ function greeting() {
 }
 
 export default function DashboardPage() {
+  const staff = useCurrentStaff();
   const mounted = useMounted();
   const [rangeKey, setRangeKey] = useState("last30");
   const [custom, setCustom] = useState(null);
@@ -88,7 +89,7 @@ export default function DashboardPage() {
   }
 
   const { metrics, series, topProducts, customerAnalytics, recentOrders, inventoryAttention } = data;
-  const firstName = CURRENT_STAFF.name.split(" ")[0];
+  const firstName = staff.name.split(" ")[0];
 
   return (
     <div className="flex flex-col gap-6">

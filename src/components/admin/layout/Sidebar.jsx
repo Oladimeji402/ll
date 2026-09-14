@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { NAV_SECTIONS } from "./nav-config";
 import Tooltip from "../ui/Tooltip";
 import { useUiStore } from "@/lib/admin/store/ui-store";
-import { CURRENT_STAFF } from "@/lib/admin/utils/current-user";
+import { useCurrentStaff } from "./CurrentStaffContext";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
-import { avatarColor, initials } from "@/lib/admin/utils/avatar";
+import { avatarColor, initials, toneFromString } from "@/lib/admin/utils/avatar";
 
 function isActive(pathname, item) {
   if (item.exact) return pathname === item.href;
@@ -19,6 +19,7 @@ function isActive(pathname, item) {
 export default function Sidebar() {
   const pathname = usePathname();
   const mounted = useMounted();
+  const staff = useCurrentStaff();
   const collapsedPersisted = useUiStore((s) => s.value.sidebarCollapsed);
   const setCollapsed = useUiStore((s) => s._patch);
   const collapsed = mounted && collapsedPersisted;
@@ -109,15 +110,15 @@ export default function Sidebar() {
         >
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white"
-            style={{ backgroundColor: avatarColor(CURRENT_STAFF.tone) }}
+            style={{ backgroundColor: avatarColor(toneFromString(staff.email)) }}
             aria-hidden="true"
           >
-            {initials(CURRENT_STAFF.name)}
+            {initials(staff.name)}
           </span>
           {!collapsed && (
             <span className="min-w-0">
-              <span className="block truncate text-sm text-white">{CURRENT_STAFF.name}</span>
-              <span className="block truncate text-xs text-[var(--admin-sidebar-fg-muted)]">{CURRENT_STAFF.role}</span>
+              <span className="block truncate text-sm text-white">{staff.name}</span>
+              <span className="block truncate text-xs text-[var(--admin-sidebar-fg-muted)]">{staff.role}</span>
             </span>
           )}
         </Link>
