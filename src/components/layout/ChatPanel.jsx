@@ -2,21 +2,25 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { cn, formatPrice } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
+import AuthForm from "@/components/auth/AuthForm";
+import { createClient } from "@/lib/supabase/client";
+import { useSupabaseUser } from "@/lib/supabase/use-user";
 
 const TABS = [
   { id: "home", label: "Home", Icon: HomeIcon },
   { id: "orders", label: "Saved", Icon: BookmarkIcon },
-  { id: "chat", label: "Chat", Icon: ChatIcon },
+  { id: "chat", label: "Chat", Icon: ChatIcon, disabled: true },
   { id: "account", label: "Account", Icon: AccountIcon },
 ];
 
 export default function ChatPanel({ open, onClose }) {
-  const [tab, setTab] = useState("chat");
+  const [tab, setTab] = useState("home");
   const [featuredCategory, setFeaturedCategory] = useState(null);
-  const { heading } = siteConfig.chat;
+  const user = useSupabaseUser();
 
   useEffect(() => {
     let cancelled = false;
@@ -54,35 +58,34 @@ export default function ChatPanel({ open, onClose }) {
         )}
       >
         <div className="flex items-center justify-end border-b border-[var(--color-line)] px-6 py-5">
-          {tab === "chat" ? (
-            <span className="mr-auto font-serif text-xl text-[var(--color-text)]">{heading}</span>
-          ) : null}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="text-2xl leading-none text-[var(--color-text)]"
+            className="ml-auto text-2xl leading-none text-[var(--color-text)]"
           >
             &times;
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {tab === "home" ? <HomeTab featuredCategory={featuredCategory} /> : null}
-          {tab === "orders" ? <SignInTab heading={siteConfig.chat.orders.heading} /> : null}
-          {tab === "chat" ? <ChatTab /> : null}
-          {tab === "account" ? <SignInTab heading={siteConfig.chat.account.heading} /> : null}
+          {tab === "home" ? <HomeTab featuredCategory={featuredCategory} user={user} /> : null}
+          {tab === "orders" ? <OrdersTab user={user} onClose={onClose} /> : null}
+          {tab === "account" ? <AccountTab user={user} onClose={onClose} /> : null}
         </div>
 
         <div className="grid grid-cols-4 border-t border-[var(--color-line)] px-2 py-3">
-          {TABS.map(({ id, label, Icon }) => (
+          {TABS.map(({ id, label, Icon, disabled }) => (
             <button
               key={id}
               type="button"
+              disabled={disabled}
+              title={disabled ? "Coming soon" : undefined}
               onClick={() => setTab(id)}
               aria-pressed={tab === id}
               className={cn(
-                "flex flex-col items-center gap-1 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-primary)]",
+                "flex flex-col items-center gap-1 text-[var(--color-text-muted)] transition-colors",
+                disabled ? "cursor-not-allowed opacity-40" : "hover:text-[var(--color-primary)]",
                 tab === id && "text-[var(--color-primary)]",
               )}
             >
@@ -96,33 +99,16 @@ export default function ChatPanel({ open, onClose }) {
   );
 }
 
-function EmailSignInForm() {
-  const { emailPlaceholder, signInLabel } = siteConfig.chat;
-  return (
-    <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-3">
-      <input
-        type="email"
-        required
-        placeholder={emailPlaceholder}
-        className="border border-[var(--color-line)] bg-transparent px-4 py-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]"
-      />
-      <button
-        type="submit"
-        className="tracking-nav bg-[var(--color-primary)] py-3 text-xs uppercase text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)]"
-      >
-        {signInLabel}
-      </button>
-    </form>
-  );
-}
+function HomeTab({ featuredCategory, user }) {
+  const router = useRouter();
 
-function HomeTab({ featuredCategory }) {
   return (
     <div className="flex flex-col gap-6 px-6 py-6">
       <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">
         {siteConfig.chat.home.heading}
       </h2>
-      <EmailSignInForm />
+
+      {user === null && <AuthForm onSuccess={() => router.refresh()} />}
 
       {featuredCategory ? (
         <Link
@@ -156,75 +142,133 @@ function HomeTab({ featuredCategory }) {
   );
 }
 
-function SignInTab({ heading }) {
+function OrdersTab({ user, onClose }) {
+  const router = useRouter();
+  const [orders, setOrders] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetch("/api/account/orders")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setOrders(data);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  if (user === undefined) return null;
+
+  if (user === null) {
+    return (
+      <div className="flex flex-col gap-6 px-6 py-6">
+        <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">
+          {siteConfig.chat.orders.heading}
+        </h2>
+        <AuthForm onSuccess={() => router.refresh()} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 px-6 py-6">
+      <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">Your Orders</h2>
+
+      {orders === null && <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>}
+
+      {orders?.length === 0 && (
+        <p className="text-sm text-[var(--color-text-muted)]">
+          You haven&apos;t placed any orders yet.
+        </p>
+      )}
+
+      {orders?.length > 0 && (
+        <ul className="flex flex-col divide-y divide-[var(--color-line)] border-y border-[var(--color-line)]">
+          {orders.map((order) => (
+            <li key={order.id}>
+              <Link
+                href={`/account/orders/${order.orderNumber}`}
+                onClick={onClose}
+                className="flex items-center justify-between gap-4 py-4 hover:bg-[var(--color-bg-alt)]"
+              >
+                <div>
+                  <p className="text-sm text-[var(--color-text)]">{order.orderNumber}</p>
+                  <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                    {new Date(order.createdAt).toLocaleDateString("en-NG", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <p className="text-sm text-[var(--color-primary)]">{formatPrice(order.total)}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function AccountTab({ user, onClose }) {
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.refresh();
+  }
+
+  if (user === undefined) return null;
+
+  if (user === null) {
+    return (
+      <div className="flex flex-col gap-6 px-6 py-6">
+        <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">
+          {siteConfig.chat.account.heading}
+        </h2>
+        <AuthForm onSuccess={() => router.refresh()} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 px-6 py-6">
-      <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">{heading}</h2>
-      <EmailSignInForm />
-    </div>
-  );
-}
-
-function ChatTab() {
-  const { assistantName, assistantRole, greeting, consentText, inputPlaceholder } = siteConfig.chat;
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-[90%] bg-[var(--color-bg-alt)] px-5 py-4">
-          <p className="tracking-nav text-[11px] uppercase text-[var(--color-text-muted)]">
-            {assistantName} &bull; {assistantRole}
-          </p>
-          <div className="mt-3 space-y-3 text-sm leading-relaxed text-[var(--color-text)]">
-            {greeting.map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
-          </div>
-        </div>
+      <div>
+        <h2 className="font-serif text-2xl leading-snug text-[var(--color-primary)]">
+          Hi, {(user.user_metadata?.name || user.email).split(" ")[0]}
+        </h2>
+        <p className="mt-1 truncate text-sm text-[var(--color-text-muted)]">{user.email}</p>
       </div>
 
-      <p className="px-6 text-center text-xs leading-relaxed text-[var(--color-text-muted)]">
-        {consentText}
-      </p>
-
-      <div className="flex items-center gap-3 px-6 py-5">
-        <button
-          type="button"
-          aria-label="Add attachment"
-          className="flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--color-line)] text-[var(--color-text)] transition-colors hover:border-[var(--color-text)]"
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/account/orders"
+          onClick={onClose}
+          className="tracking-nav border border-[var(--color-line)] py-3 text-center text-[10px] uppercase text-[var(--color-text-muted)] hover:border-[var(--color-text)]"
         >
-          <PlusIcon />
-        </button>
-        <input
-          type="text"
-          placeholder={inputPlaceholder}
-          className="flex-1 border border-[var(--color-line)] bg-transparent px-4 py-2.5 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]"
-        />
-        <button
-          type="button"
-          aria-label="Send message"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)]"
+          Orders
+        </Link>
+        <Link
+          href="/account/profile"
+          onClick={onClose}
+          className="tracking-nav border border-[var(--color-line)] py-3 text-center text-[10px] uppercase text-[var(--color-text-muted)] hover:border-[var(--color-text)]"
         >
-          <SendIcon />
-        </button>
+          Profile
+        </Link>
       </div>
+
+      <button
+        type="button"
+        onClick={handleSignOut}
+        className="tracking-nav w-full border border-[var(--color-text)] py-3 text-xs uppercase text-[var(--color-text)] transition-colors hover:bg-[var(--color-text)] hover:text-[var(--color-surface)]"
+      >
+        Sign Out
+      </button>
     </div>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SendIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M12 19V5M6 11l6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 
