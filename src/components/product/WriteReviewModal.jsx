@@ -4,14 +4,18 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import PlaceholderImage from "@/components/ui/PlaceholderImage";
+import { createClient } from "@/lib/supabase/client";
 
-export default function WriteReviewModal({ open, onClose, product }) {
+export default function WriteReviewModal({ open, onClose, onSubmitted, product }) {
   const [step, setStep] = useState("rate");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [contentVisible, setContentVisible] = useState(true);
   const contentRef = useRef(null);
   const [height, setHeight] = useState("auto");
+  const [form, setForm] = useState({ email: "", name: "", body: "" });
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
 
   useLayoutEffect(() => {
     if (contentRef.current) {
@@ -24,6 +28,37 @@ export default function WriteReviewModal({ open, onClose, product }) {
     setRating(0);
     setHoverRating(0);
     setContentVisible(true);
+    setForm({ email: "", name: "", body: "" });
+    setError("");
+  }
+
+  function updateField(field) {
+    return (event) => setForm((f) => ({ ...f, [field]: event.target.value }));
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!product) return;
+    setError("");
+    setPending(true);
+
+    const supabase = createClient();
+    const { error: insertError } = await supabase.from("reviews").insert({
+      product_id: product.id,
+      rating,
+      author_name: form.name,
+      author_email: form.email,
+      body: form.body,
+    });
+
+    setPending(false);
+    if (insertError) {
+      setError("Couldn't submit your review. Please try again.");
+      return;
+    }
+
+    onSubmitted?.();
+    setTimeout(reset, 300);
   }
 
   function handleClose() {
@@ -120,7 +155,7 @@ export default function WriteReviewModal({ open, onClose, product }) {
                 })}
               </div>
             ) : (
-              <form onSubmit={(e) => { e.preventDefault(); handleClose(); }} className="mt-6 flex flex-col gap-6">
+              <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
                 <div className="flex justify-center gap-2">
                   {Array.from({ length: 5 }, (_, i) => {
                     const value = i + 1;
@@ -145,6 +180,8 @@ export default function WriteReviewModal({ open, onClose, product }) {
                   <input
                     type="email"
                     required
+                    value={form.email}
+                    onChange={updateField("email")}
                     placeholder={writeReviewForm.emailPlaceholder}
                     className="mt-2 w-full border border-[var(--color-line)] bg-transparent px-4 py-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]"
                   />
@@ -157,6 +194,8 @@ export default function WriteReviewModal({ open, onClose, product }) {
                   <input
                     type="text"
                     required
+                    value={form.name}
+                    onChange={updateField("name")}
                     placeholder={writeReviewForm.namePlaceholder}
                     className="mt-2 w-full border border-[var(--color-line)] bg-transparent px-4 py-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]"
                   />
@@ -169,6 +208,8 @@ export default function WriteReviewModal({ open, onClose, product }) {
                   <textarea
                     required
                     rows={4}
+                    value={form.body}
+                    onChange={updateField("body")}
                     placeholder={writeReviewForm.reviewPlaceholder}
                     className="mt-2 w-full resize-y border border-[var(--color-line)] bg-transparent px-4 py-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]"
                   />
@@ -185,11 +226,18 @@ export default function WriteReviewModal({ open, onClose, product }) {
                   </button>
                 </div>
 
+                {error && (
+                  <p className="text-sm text-red-600" role="alert">
+                    {error}
+                  </p>
+                )}
+
                 <button
                   type="submit"
-                  className="tracking-nav bg-[var(--color-primary)] py-3 text-xs uppercase text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)]"
+                  disabled={pending}
+                  className="tracking-nav bg-[var(--color-primary)] py-3 text-xs uppercase text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)] disabled:opacity-60"
                 >
-                  {writeReviewForm.doneLabel}
+                  {pending ? "Submitting…" : writeReviewForm.doneLabel}
                 </button>
               </form>
             )}

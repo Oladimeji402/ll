@@ -36,6 +36,25 @@ export async function getAllProducts() {
   return data.map(mapProduct);
 }
 
+export async function searchProducts(query, limit = 8) {
+  // Strip characters meaningful to PostgREST's or=(...) filter grammar so a
+  // typed comma/paren can't reshape the query instead of just matching text.
+  const term = query.replace(/[,()*]/g, " ").trim();
+  if (!term) return [];
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("status", "active")
+    .or(`title.ilike.%${term}%,category.ilike.%${term}%,description.ilike.%${term}%`)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+  return data.map(mapProduct);
+}
+
 export async function getProductBySlug(slug) {
   const supabase = createPublicClient();
   const { data, error } = await supabase

@@ -1,29 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Reveal from "@/components/ui/Reveal";
 import WriteReviewModal from "@/components/product/WriteReviewModal";
 import { siteConfig } from "@/config/site";
 
-/**
- * Placeholder "customer reviews" widget (empty state). Shaped to match
- * what a real reviews app (Judge.me, Loox, Okendo, …) renders, so wiring
- * one up later is a drop-in swap rather than a redesign.
- */
-export default function CustomerReviews({ product }) {
+export default function CustomerReviews({ product, reviews }) {
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
-  const {
-    heading,
-    average,
-    count,
-    breakdown,
-    writeReviewLabel,
-    searchPlaceholder,
-    sortLabel,
-    filterLabel,
-    mediaFilterLabel,
-    emptyStateText,
-  } = siteConfig.productPage.customerReviews;
+  const [query, setQuery] = useState("");
+  const { heading, writeReviewLabel, searchPlaceholder, sortLabel, filterLabel, mediaFilterLabel, emptyStateText } =
+    siteConfig.productPage.customerReviews;
+
+  const { reviews: items, count, average, breakdown } = reviews;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (r) => r.body.toLowerCase().includes(q) || r.authorName.toLowerCase().includes(q),
+    );
+  }, [items, query]);
+
+  function handleSubmitted() {
+    setModalOpen(false);
+    router.refresh();
+  }
 
   return (
     <section className="mx-auto max-w-4xl px-5 py-16 sm:py-20">
@@ -84,6 +87,8 @@ export default function CustomerReviews({ product }) {
       <Reveal className="mt-6 flex flex-wrap gap-3">
         <input
           type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder={searchPlaceholder}
           className="min-w-[180px] flex-1 rounded-full border border-[var(--color-line)] bg-[var(--color-bg-alt)] px-4 py-2 text-sm outline-none placeholder:text-[var(--color-text-muted)]"
         />
@@ -98,11 +103,39 @@ export default function CustomerReviews({ product }) {
         </span>
       </Reveal>
 
-      <Reveal className="mt-10 py-6 text-center text-sm text-[var(--color-text-muted)]">
-        {emptyStateText}
-      </Reveal>
+      {filtered.length === 0 ? (
+        <Reveal className="mt-10 py-6 text-center text-sm text-[var(--color-text-muted)]">
+          {count === 0 ? emptyStateText : "No reviews match your search."}
+        </Reveal>
+      ) : (
+        <ul className="mt-8 flex flex-col divide-y divide-[var(--color-line)]">
+          {filtered.map((review) => (
+            <li key={review.id} className="py-6">
+              <div className="flex items-center justify-between gap-4">
+                <Stars rating={review.rating} />
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  {new Date(review.createdAt).toLocaleDateString("en-NG", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--color-text)]">{review.body}</p>
+              <p className="mt-2 tracking-nav text-xs uppercase text-[var(--color-text-muted)]">
+                {review.authorName}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      <WriteReviewModal open={modalOpen} onClose={() => setModalOpen(false)} product={product} />
+      <WriteReviewModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmitted={handleSubmitted}
+        product={product}
+      />
     </section>
   );
 }

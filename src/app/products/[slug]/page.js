@@ -10,6 +10,7 @@ import CustomerReviews from "@/components/sections/CustomerReviews";
 import TrustBadges from "@/components/sections/TrustBadges";
 import Faq from "@/components/sections/Faq";
 import { getAllProducts, getProductBySlug, getRelatedProducts } from "@/lib/supabase/queries/catalog";
+import { getProductReviews } from "@/lib/supabase/queries/reviews";
 
 export async function generateStaticParams() {
   const products = await getAllProducts();
@@ -28,7 +29,7 @@ export default async function ProductPage({ params }) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const related = await getRelatedProducts(product);
+  const [related, reviews] = await Promise.all([getRelatedProducts(product), getProductReviews(product.id)]);
 
   return (
     <>
@@ -41,7 +42,7 @@ export default async function ProductPage({ params }) {
         </div>
 
         <RelatedProducts products={related} />
-        <CustomerReviews product={product} />
+        <CustomerReviews product={product} reviews={reviews} />
         <TrustBadges />
         <Faq />
       </main>
