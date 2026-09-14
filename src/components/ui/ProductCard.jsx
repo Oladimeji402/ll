@@ -1,10 +1,31 @@
+"use client";
+
 import Link from "next/link";
 import PlaceholderImage from "./PlaceholderImage";
 import { formatPrice } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export default function ProductCard({ product, theme = "light" }) {
   const isDark = theme === "dark";
+  const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartStore((s) => s.openCart);
+
+  function handleQuickAdd(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    addItem(product, product.sizes[0], 1);
+    openCart();
+  }
+
+  // Rendered as `role="button"` spans (not <button>) because these sit
+  // inside the card's <Link> — nesting a real button in an anchor is
+  // invalid HTML and browsers will silently break the layout.
+  function handleQuickAddKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      handleQuickAdd(event);
+    }
+  }
 
   return (
     <Link href={`/products/${product.slug}`} className="group block">
@@ -27,9 +48,14 @@ export default function ProductCard({ product, theme = "light" }) {
         />
 
         {/* Desktop: full-width bar revealed on hover */}
-        <div
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={handleQuickAdd}
+          onKeyDown={handleQuickAddKeyDown}
+          aria-label={`Quick add ${product.name}`}
           className={cn(
-            "absolute inset-x-0 bottom-0 hidden translate-y-full py-3 text-center transition-transform duration-300 ease-out group-hover:translate-y-0 md:block",
+            "absolute inset-x-0 bottom-0 hidden translate-y-full cursor-pointer py-3 text-center transition-transform duration-300 ease-out group-hover:translate-y-0 md:block",
             isDark ? "bg-[var(--color-surface)]" : "bg-[var(--color-primary)]",
           )}
         >
@@ -41,12 +67,16 @@ export default function ProductCard({ product, theme = "light" }) {
           >
             Quick Add
           </span>
-        </div>
+        </span>
 
         {/* Mobile: no reliable hover, so show a persistent quick-add button instead */}
         <span
-          aria-hidden="true"
-          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] md:hidden"
+          role="button"
+          tabIndex={0}
+          onClick={handleQuickAdd}
+          onKeyDown={handleQuickAddKeyDown}
+          aria-label={`Quick add ${product.name}`}
+          className="absolute bottom-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] md:hidden"
         >
           <BagPlusIcon />
         </span>

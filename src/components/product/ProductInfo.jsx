@@ -5,10 +5,18 @@ import { formatPrice } from "@/data/products";
 import { siteConfig } from "@/config/site";
 import Accordion from "@/components/ui/Accordion";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export default function ProductInfo({ product }) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
+  const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartStore((s) => s.openCart);
   const { productPage } = siteConfig;
+
+  function handleAddToBag() {
+    addItem(product, selectedSize, 1);
+    openCart();
+  }
 
   return (
     <div className="flex flex-col px-6 py-10 lg:px-16 lg:py-16">
@@ -57,6 +65,7 @@ export default function ProductInfo({ product }) {
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
+          onClick={handleAddToBag}
           className="tracking-nav flex flex-1 items-center justify-center gap-2 border border-[var(--color-primary)] px-6 py-4 text-xs uppercase text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)] hover:text-[var(--color-on-primary)]"
         >
           <CartIcon />
@@ -64,6 +73,7 @@ export default function ProductInfo({ product }) {
         </button>
         <button
           type="button"
+          onClick={handleAddToBag}
           className="tracking-nav flex-1 bg-[var(--color-primary)] px-6 py-4 text-xs uppercase text-[var(--color-on-primary)] transition-colors hover:bg-[var(--color-primary-dark)]"
         >
           {productPage.buyNowLabel}

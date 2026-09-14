@@ -5,7 +5,9 @@ import Link from "next/link";
 import { cn, slugify } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
+import { useMounted } from "@/hooks/useMounted";
 import { getAllProducts } from "@/data/products";
+import { useCartStore, useCartCount } from "@/lib/store/cart-store";
 import MobileMenu from "./MobileMenu";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "./CartDrawer";
@@ -17,8 +19,12 @@ export default function Header() {
   const { scrolled } = useScrollPosition(40);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const cartOpen = useCartStore((s) => s.open);
+  const openCart = useCartStore((s) => s.openCart);
+  const closeCart = useCartStore((s) => s.closeCart);
+  const cartCount = useCartCount();
+  const mounted = useMounted();
 
   return (
     <>
@@ -67,8 +73,13 @@ export default function Header() {
             >
               <UserIcon />
             </IconButton>
-            <IconButton label="Bag" onClick={() => setCartOpen(true)}>
+            <IconButton label="Bag" onClick={openCart} className="relative">
               <BagIcon />
+              {mounted && cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[9px] font-medium text-[var(--color-on-primary)]">
+                  {cartCount}
+                </span>
+              )}
             </IconButton>
           </div>
         </div>
@@ -88,7 +99,7 @@ export default function Header() {
 
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} products={searchPicks} />
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer open={cartOpen} onClose={closeCart} />
       <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
     </>
   );
