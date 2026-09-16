@@ -56,7 +56,8 @@ export default function DashboardPage() {
       getTopProducts(rangeKey, custom, 5),
       getCustomerAnalytics(rangeKey, custom),
       listOrders({ page: 1, pageSize: 6, sort: { field: "createdAt", direction: "desc" } }),
-    ]).then(([metrics, series, topProducts, customerAnalytics, recentOrders]) => {
+      getInventoryAttention(5),
+    ]).then(([metrics, series, topProducts, customerAnalytics, recentOrders, inventoryAttention]) => {
       if (cancelled) return;
       setData({
         metrics,
@@ -64,7 +65,7 @@ export default function DashboardPage() {
         topProducts,
         customerAnalytics,
         recentOrders: recentOrders.items,
-        inventoryAttention: getInventoryAttention(5),
+        inventoryAttention,
       });
       setLoading(false);
     });

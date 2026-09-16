@@ -13,8 +13,11 @@ const GROUPS = [
   { key: "collections", label: "Collections", icon: Layers },
 ];
 
+const EMPTY_RESULTS = { products: [], orders: [], customers: [], collections: [] };
+
 export default function CommandPalette({ open, onClose }) {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState(EMPTY_RESULTS);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef(null);
   const router = useRouter();
@@ -22,12 +25,30 @@ export default function CommandPalette({ open, onClose }) {
   useEffect(() => {
     if (open) {
       setQuery("");
+      setResults(EMPTY_RESULTS);
       setActiveIndex(0);
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
 
-  const results = useMemo(() => globalSearch(query), [query]);
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setResults(EMPTY_RESULTS);
+      return;
+    }
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      globalSearch(trimmed).then((r) => {
+        if (!cancelled) setResults(r);
+      });
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [query]);
+
   const flatResults = useMemo(
     () => GROUPS.flatMap((group) => results[group.key].map((item) => ({ ...item, group: group.key }))),
     [results],

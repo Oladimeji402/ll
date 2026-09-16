@@ -1,11 +1,58 @@
-import { useOrdersStore } from "../store/orders-store";
-import { useCustomersStore } from "../store/customers-store";
-import { useProductsStore } from "../store/products-store";
-import { useCollectionsStore } from "../store/collections-store";
-import { useInventoryStore } from "../store/inventory-store";
+import { createClient } from "@/lib/supabase/client";
 import { inventoryStatus } from "../types/inventory";
-import { simulateLatency } from "../utils/async";
 import { resolveRange, previousPeriod, eachDay, percentChange } from "../utils/date-range";
+
+async function fetchOrdersForAnalytics() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("id, customer_id, total, payment_status, created_at, order_items(product_id, quantity, price)");
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    customerId: row.customer_id,
+    total: Number(row.total),
+    paymentStatus: row.payment_status,
+    createdAt: row.created_at,
+    items: (row.order_items ?? []).map((item) => ({
+      productId: item.product_id,
+      quantity: item.quantity,
+      price: Number(item.price),
+    })),
+  }));
+}
+
+async function fetchCustomersForAnalytics() {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("customers").select("id, created_at");
+  if (error) throw error;
+  return data.map((row) => ({ id: row.id, createdAt: row.created_at }));
+}
+
+async function fetchProductsForAnalytics() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, title, images, quantity, low_stock_threshold, sku, tone, product_collections(collection_id)");
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    title: row.title,
+    images: row.images,
+    quantity: row.quantity,
+    lowStockThreshold: row.low_stock_threshold,
+    sku: row.sku,
+    tone: row.tone,
+    collectionIds: (row.product_collections ?? []).map((pc) => pc.collection_id),
+  }));
+}
+
+async function fetchCollectionsForAnalytics() {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("collections").select("id, title");
+  if (error) throw error;
+  return data;
+}
 
 function ordersInRange(orders, { start, end }) {
   return orders.filter((o) => {
@@ -19,10 +66,9 @@ function revenueOf(orders) {
 }
 
 export async function getDashboardMetrics(rangeKey = "last30", custom) {
-  await simulateLatency(300);
   const range = resolveRange(rangeKey, custom);
   const prevRange = previousPeriod(range);
-  const allOrders = useOrdersStore.getState().items;
+  const allOrders = await fetchOrdersForAnalytics();
   const current = ordersInRange(allOrders, range);
   const previous = ordersInRange(allOrders, prevRange);
 
@@ -31,7 +77,7 @@ export async function getDashboardMetrics(rangeKey = "last30", custom) {
   const currentAov = current.length ? currentRevenue / current.length : 0;
   const previousAov = previous.length ? previousRevenue / previous.length : 0;
 
-  const customers = useCustomersStore.getState().items;
+  const customers = await fetchCustomersForAnalytics();
   const currentCustomerIds = new Set(current.map((o) => o.customerId));
   const previousCustomerIds = new Set(previous.map((o) => o.customerId));
   const newCustomersInRange = customers.filter((c) => {
@@ -61,10 +107,9 @@ export async function getDashboardMetrics(rangeKey = "last30", custom) {
 }
 
 export async function getSalesSeries(rangeKey = "last30", custom, metric = "revenue") {
-  await simulateLatency(300);
   const range = resolveRange(rangeKey, custom);
   const prevRange = previousPeriod(range);
-  const allOrders = useOrdersStore.getState().items;
+  const allOrders = await fetchOrdersForAnalytics();
   const current = ordersInRange(allOrders, range);
   const previous = ordersInRange(allOrders, prevRange);
 
@@ -90,10 +135,10 @@ export async function getSalesSeries(rangeKey = "last30", custom, metric = "reve
 }
 
 export async function getTopProducts(rangeKey = "last30", custom, limit = 6) {
-  await simulateLatency(300);
   const range = resolveRange(rangeKey, custom);
-  const orders = ordersInRange(useOrdersStore.getState().items, range);
-  const products = useProductsStore.getState().items;
+  const allOrders = await fetchOrdersForAnalytics();
+  const orders = ordersInRange(allOrders, range);
+  const products = await fetchProductsForAnalytics();
 
   const tally = new Map();
   orders.forEach((order) => {
@@ -116,9 +161,8 @@ export async function getTopProducts(rangeKey = "last30", custom, limit = 6) {
 }
 
 export async function getTopCollections(rangeKey = "last30", custom, limit = 5) {
-  await simulateLatency(300);
   const topProducts = await getTopProducts(rangeKey, custom, 100);
-  const collections = useCollectionsStore.getState().items;
+  const collections = await fetchCollectionsForAnalytics();
   const tally = new Map();
 
   topProducts.forEach(({ product, revenue, unitsSold }) => {
@@ -141,10 +185,10 @@ export async function getTopCollections(rangeKey = "last30", custom, limit = 5) 
 }
 
 export async function getCustomerAnalytics(rangeKey = "last30", custom) {
-  await simulateLatency(300);
   const range = resolveRange(rangeKey, custom);
-  const orders = ordersInRange(useOrdersStore.getState().items, range);
-  const customers = useCustomersStore.getState().items;
+  const allOrders = await fetchOrdersForAnalytics();
+  const orders = ordersInRange(allOrders, range);
+  const customers = await fetchCustomersForAnalytics();
 
   const customerOrderCounts = new Map();
   orders.forEach((o) => {
@@ -167,8 +211,14 @@ export async function getCustomerAnalytics(rangeKey = "last30", custom) {
   return { newCount, returningCount, repeatPurchaseRate };
 }
 
-export function getInventoryAttention(limit = 6) {
-  const items = useInventoryStore.getState().items;
+export async function getInventoryAttention(limit = 6) {
+  const products = await fetchProductsForAnalytics();
+  const items = products.map((p) => ({
+    id: p.id,
+    productTitle: p.title,
+    available: p.quantity,
+    lowStockThreshold: p.lowStockThreshold,
+  }));
   const attention = items.filter((i) => inventoryStatus(i) !== "in-stock");
   return {
     lowStock: attention.filter((i) => inventoryStatus(i) === "low-stock").slice(0, limit),
