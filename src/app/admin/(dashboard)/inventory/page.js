@@ -21,7 +21,7 @@ import PlaceholderImage from "@/components/ui/PlaceholderImage";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
 import { formatDateTime } from "@/lib/admin/utils/format";
 import { inventoryStatus, STOCK_REASONS } from "@/lib/admin/types/inventory";
-import { listInventory, getInventoryCounts, adjustStock } from "@/lib/admin/services/inventory-service";
+import { listInventory, getInventoryCounts, getInventoryItem, adjustStock } from "@/lib/admin/services/inventory-service";
 import { useToast } from "@/components/admin/ui/Toast";
 
 const VIEWS = [
@@ -56,10 +56,12 @@ export default function InventoryPage() {
     setLoading(true);
     setError(false);
     listInventory({ search, view, page, pageSize: 10 })
-      .then((res) => {
+      .then(async (res) => {
         if (cancelled) return;
         setResult(res);
-        setCounts(getInventoryCounts());
+        const counts = await getInventoryCounts();
+        if (cancelled) return;
+        setCounts(counts);
         setLoading(false);
       })
       .catch(() => !cancelled && (setError(true), setLoading(false)));
@@ -129,7 +131,7 @@ export default function InventoryPage() {
         <DataTable
           columns={columns}
           rows={result?.items ?? []}
-          onRowClick={setActiveItem}
+          onRowClick={(row) => getInventoryItem(row.id).then(setActiveItem)}
           loading={!mounted || loading}
           error={error && <ErrorState title="Unable to load inventory" onRetry={() => setRefreshKey((k) => k + 1)} />}
           empty={<EmptyState icon={Boxes} title="No inventory items" description="Products will appear here once added to your catalog." />}

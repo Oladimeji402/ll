@@ -1,14 +1,44 @@
-import { useInventoryStore } from "../store/inventory-store";
-import { useProductsStore } from "../store/products-store";
+import { createClient } from "@/lib/supabase/client";
 import { inventoryStatus } from "../types/inventory";
-import { generateId } from "../utils/id";
-import { CURRENT_STAFF } from "../utils/current-user";
-import { simulateLatency } from "../utils/async";
 import { matchesSearch, sortBy, paginate } from "../utils/list-query";
 import { logActivity } from "./activity-service";
 import { pushNotification } from "./notification-service";
 
 const SEARCH_FIELDS = ["productTitle", "sku"];
+
+// One inventory row per product — "available" is just products.quantity,
+// the same column the storefront reads. There's no reserved-stock concept
+// yet (nothing holds stock at order time), so it's always 0 for now.
+function mapProductToInventoryItem(row, history = []) {
+  const available = row.quantity;
+  return {
+    id: row.id,
+    productId: row.id,
+    productTitle: row.title,
+    sku: row.sku,
+    tone: row.tone,
+    available,
+    reserved: 0,
+    total: available,
+    lowStockThreshold: row.low_stock_threshold,
+    history: history.map((h) => ({
+      id: h.id,
+      date: h.created_at,
+      change: h.change,
+      reason: h.reason,
+      note: h.note,
+      resultingQty: h.resulting_quantity,
+      actor: h.actor_name,
+    })),
+  };
+}
+
+async function fetchAllInventory() {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("products").select("*");
+  if (error) throw error;
+  return data.map((row) => mapProductToInventoryItem(row));
+}
 
 export function filterInventory(items, { search, view = "all" } = {}) {
   return items.filter((item) => {
@@ -24,15 +54,14 @@ export async function listInventory({
   page = 1,
   pageSize = 10,
 } = {}) {
-  await simulateLatency();
-  const all = useInventoryStore.getState().items;
+  const all = await fetchAllInventory();
   const filtered = filterInventory(all, { search, view });
   const sorted = sortBy(filtered, sort);
   return paginate(sorted, { page, pageSize });
 }
 
-export function getInventoryCounts() {
-  const all = useInventoryStore.getState().items;
+export async function getInventoryCounts() {
+  const all = await fetchAllInventory();
   return {
     all: all.length,
     "in-stock": all.filter((i) => inventoryStatus(i) === "in-stock").length,
@@ -42,38 +71,53 @@ export function getInventoryCounts() {
 }
 
 export async function getInventoryItem(id) {
-  await simulateLatency(200);
-  return useInventoryStore.getState().items.find((i) => i.id === id) ?? null;
+  const supabase = createClient();
+  const [{ data: row, error: productError }, { data: history, error: historyError }] = await Promise.all([
+    supabase.from("products").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("inventory_adjustments")
+      .select("*")
+      .eq("product_id", id)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (productError) throw productError;
+  if (historyError) throw historyError;
+  return row ? mapProductToInventoryItem(row, history ?? []) : null;
 }
 
 export async function adjustStock(id, { direction, quantity, reason, note }) {
-  await simulateLatency(400);
-  const item = useInventoryStore.getState().items.find((i) => i.id === id);
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: staff } = user
+    ? await supabase.from("staff_members").select("name").eq("id", user.id).maybeSingle()
+    : { data: null };
+
+  const item = await getInventoryItem(id);
   if (!item) throw new Error("Inventory item not found");
 
   const change = direction === "decrease" ? -Math.abs(quantity) : Math.abs(quantity);
   const nextAvailable = Math.max(0, item.available + change);
-  const entry = {
-    id: generateId("inv-hist"),
-    date: new Date().toISOString(),
+
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({ quantity: nextAvailable })
+    .eq("id", id);
+  if (updateError) throw updateError;
+
+  const { error: historyError } = await supabase.from("inventory_adjustments").insert({
+    product_id: id,
     change,
     reason,
     note: note || "",
-    resultingQty: nextAvailable,
-    actor: CURRENT_STAFF.name,
-  };
-  const updated = {
-    ...item,
-    available: nextAvailable,
-    total: nextAvailable + item.reserved,
-    history: [...item.history, entry],
-  };
-  useInventoryStore.getState()._upsert(updated);
-
-  const product = useProductsStore.getState().items.find((p) => p.id === item.productId);
-  if (product) {
-    useProductsStore.getState()._upsert({ ...product, quantity: nextAvailable, updatedAt: new Date().toISOString() });
-  }
+    resulting_quantity: nextAvailable,
+    actor_id: user?.id ?? null,
+    actor_name: staff?.name ?? "",
+  });
+  if (historyError) throw historyError;
 
   logActivity({
     action: "adjusted inventory for",
@@ -83,6 +127,7 @@ export async function adjustStock(id, { direction, quantity, reason, note }) {
     details: `${direction === "decrease" ? "Removed" : "Added"} ${quantity} unit(s) — ${reason}`,
   });
 
+  const updated = await getInventoryItem(id);
   const status = inventoryStatus(updated);
   if (status !== "in-stock") {
     pushNotification({
