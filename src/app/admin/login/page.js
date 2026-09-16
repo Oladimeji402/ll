@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import Field from "@/components/admin/ui/form/Field";
 import Input from "@/components/admin/ui/form/Input";
@@ -8,6 +8,14 @@ import Button from "@/components/admin/ui/Button";
 import { signInStaff } from "./actions";
 
 export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/admin";
   const unauthorized = searchParams.get("error") === "unauthorized";
