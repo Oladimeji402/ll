@@ -1,16 +1,30 @@
-import { useSettingsStore } from "../store/settings-store";
-import { simulateLatency } from "../utils/async";
+import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "./activity-service";
 
+const SECTIONS = ["store", "checkout", "notifications", "email", "seo", "preferences", "payments"];
+
 export async function getSettings() {
-  await simulateLatency(250);
-  return useSettingsStore.getState().value;
+  const supabase = createClient();
+  const { data, error } = await supabase.from("store_settings").select("key, value").in("key", SECTIONS);
+  if (error) throw error;
+  return Object.fromEntries(data.map((row) => [row.key, row.value]));
 }
 
 export async function updateSettingsSection(section, patch) {
-  await simulateLatency(400);
-  const current = useSettingsStore.getState().value;
-  useSettingsStore.getState()._patch({ [section]: { ...current[section], ...patch } });
+  const supabase = createClient();
+  const { data: existing, error: readError } = await supabase
+    .from("store_settings")
+    .select("value")
+    .eq("key", section)
+    .maybeSingle();
+  if (readError) throw readError;
+
+  const next = { ...(existing?.value ?? {}), ...patch };
+  const { error } = await supabase
+    .from("store_settings")
+    .upsert({ key: section, value: next, updated_at: new Date().toISOString() });
+  if (error) throw error;
+
   logActivity({
     action: "updated settings",
     resourceType: "settings",
@@ -18,5 +32,5 @@ export async function updateSettingsSection(section, patch) {
     resourceLabel: section,
     details: `Updated ${section} settings`,
   });
-  return useSettingsStore.getState().value;
+  return getSettings();
 }
