@@ -1,38 +1,67 @@
+import { createClient } from "@/lib/supabase/client";
 import { useNotificationsStore } from "../store/notifications-store";
-import { generateId } from "../utils/id";
-import { simulateLatency } from "../utils/async";
 
-export function pushNotification({ type, title, body, href = null }) {
-  const notification = {
-    id: generateId("notif"),
-    type,
-    title,
-    body,
-    read: false,
-    createdAt: new Date().toISOString(),
-    href,
+function mapRow(row) {
+  return {
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    body: row.body,
+    read: row.read,
+    createdAt: row.created_at,
+    href: row.href,
   };
-  useNotificationsStore.getState()._upsert(notification);
-  return notification;
+}
+
+// Fire-and-forget, same contract as the old zustand-only version: callers
+// (product-service, inventory-service, order-service) call this right after
+// a write and don't await it. Insert into Supabase, then mirror the real
+// row into the shared store once it comes back.
+export function pushNotification({ type, title, body, href = null }) {
+  const supabase = createClient();
+  (async () => {
+    const { data, error } = await supabase
+      .from("notifications")
+      .insert({ type, title, body, href })
+      .select()
+      .single();
+    if (error) throw error;
+    useNotificationsStore.getState()._upsert(mapRow(data));
+  })().catch(() => {});
 }
 
 export async function listNotifications() {
-  await simulateLatency(150);
-  return [...useNotificationsStore.getState().items].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-  );
+  const supabase = createClient();
+  const { data, error } = await supabase.from("notifications").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  const items = data.map(mapRow);
+  useNotificationsStore.getState()._setAll(items);
+  return items;
 }
 
-export function markNotificationRead(id) {
+export async function ensureNotificationsLoaded() {
+  if (useNotificationsStore.getState().loaded) return;
+  await listNotifications();
+}
+
+export async function markNotificationRead(id) {
   const notification = useNotificationsStore.getState().items.find((n) => n.id === id);
-  if (!notification) return null;
+  if (!notification || notification.read) return notification ?? null;
   const updated = { ...notification, read: true };
   useNotificationsStore.getState()._upsert(updated);
+
+  const supabase = createClient();
+  const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+  if (error) throw error;
   return updated;
 }
 
-export function markAllNotificationsRead() {
+export async function markAllNotificationsRead() {
   const all = useNotificationsStore.getState().items.map((n) => ({ ...n, read: true }));
-  useNotificationsStore.getState()._setAll(all);
+  all.forEach((n) => useNotificationsStore.getState()._upsert(n));
+
+  const supabase = createClient();
+  const { error } = await supabase.from("notifications").update({ read: true }).eq("read", false);
+  if (error) throw error;
   return all;
 }

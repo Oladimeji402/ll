@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Bell, ShoppingBag, AlertTriangle, RotateCcw, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotificationsStore } from "@/lib/admin/store/notifications-store";
-import { markNotificationRead, markAllNotificationsRead } from "@/lib/admin/services/notification-service";
+import { ensureNotificationsLoaded, markNotificationRead, markAllNotificationsRead } from "@/lib/admin/services/notification-service";
 import { formatRelativeTime } from "@/lib/admin/utils/format";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
 
@@ -25,6 +25,10 @@ export default function NotificationsDropdown() {
   const items = useNotificationsStore((s) => s.items);
   const sorted = [...items].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
   const unreadCount = mounted ? items.filter((n) => !n.read).length : 0;
+
+  useEffect(() => {
+    if (mounted) ensureNotificationsLoaded();
+  }, [mounted]);
 
   useEffect(() => {
     function handleClick(event) {

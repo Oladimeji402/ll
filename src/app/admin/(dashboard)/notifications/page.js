@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Bell, ShoppingBag, AlertTriangle, RotateCcw, Info } from "lucide-react";
 import PageHeader from "@/components/admin/ui/PageHeader";
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
 import { formatRelativeTime } from "@/lib/admin/utils/format";
 import { useNotificationsStore } from "@/lib/admin/store/notifications-store";
-import { markNotificationRead, markAllNotificationsRead } from "@/lib/admin/services/notification-service";
+import { ensureNotificationsLoaded, markNotificationRead, markAllNotificationsRead } from "@/lib/admin/services/notification-service";
 
 const ICONS = {
   "new-order": ShoppingBag,
@@ -25,8 +26,13 @@ const ICONS = {
 export default function NotificationsPage() {
   const mounted = useMounted();
   const items = useNotificationsStore((s) => s.items);
+  const loaded = useNotificationsStore((s) => s.loaded);
   const sorted = [...items].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const unreadCount = sorted.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (mounted) ensureNotificationsLoaded();
+  }, [mounted]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -43,7 +49,7 @@ export default function NotificationsPage() {
       />
 
       <Panel padded={false}>
-        {!mounted ? (
+        {!mounted || !loaded ? (
           <SkeletonRows rows={6} cols={2} />
         ) : sorted.length === 0 ? (
           <EmptyState icon={Bell} title="No notifications" description="You're all caught up." />
