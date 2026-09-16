@@ -35,16 +35,19 @@ export default function CustomerDetailPage({ params }) {
   useEffect(() => {
     if (!mounted) return;
     let cancelled = false;
-    getCustomer(id).then((c) => {
+    getCustomer(id).then(async (c) => {
       if (cancelled) return;
       if (!c) {
         setError(true);
-      } else {
-        setCustomer(c);
-        setNote(c.notes || "");
-        setOrders(getCustomerOrders(id));
-        setActivity(getActivityForResource(id));
+        setLoading(false);
+        return;
       }
+      setCustomer(c);
+      setNote(c.notes || "");
+      const customerOrders = await getCustomerOrders(id);
+      if (cancelled) return;
+      setOrders(customerOrders);
+      setActivity(getActivityForResource(id));
       setLoading(false);
     });
     return () => {
