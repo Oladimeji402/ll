@@ -53,10 +53,12 @@ export default function OrdersPage() {
     setLoading(true);
     setError(false);
     listOrders({ search, view, sort, page, pageSize: 10 })
-      .then((res) => {
+      .then(async (res) => {
         if (cancelled) return;
         setResult(res);
-        setCounts(getOrderCounts());
+        const counts = await getOrderCounts();
+        if (cancelled) return;
+        setCounts(counts);
         setLoading(false);
       })
       .catch(() => {
