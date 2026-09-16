@@ -47,25 +47,28 @@ function mapProductRow(row) {
   };
 }
 
+// Only sets keys actually present in `input` — a blanket `?? default`
+// would silently reset any field a partial patch happens to omit (see the
+// same bug fixed in collection-service.js's toRow).
 function toRow(input) {
-  return {
-    title: input.title,
-    description: input.description ?? "",
-    slug: input.slug,
-    price: input.price,
-    compare_at_price: input.compareAtPrice ?? null,
-    category: input.category,
-    tags: input.tags?.length ? input.tags : [input.category].filter(Boolean),
-    sizes: input.sizes ?? [],
-    colors: input.colors ?? [],
-    sku: input.sku,
-    quantity: input.quantity ?? 0,
-    low_stock_threshold: input.lowStockThreshold ?? 5,
-    status: input.status ?? "draft",
-    seo_title: input.seoTitle ?? "",
-    seo_description: input.seoDescription ?? "",
-    images: input.images ?? [],
-  };
+  const row = {};
+  if (input.title !== undefined) row.title = input.title;
+  if (input.description !== undefined) row.description = input.description;
+  if (input.slug !== undefined) row.slug = input.slug;
+  if (input.price !== undefined) row.price = input.price;
+  if (input.compareAtPrice !== undefined) row.compare_at_price = input.compareAtPrice;
+  if (input.category !== undefined) row.category = input.category;
+  if (input.tags !== undefined) row.tags = input.tags.length ? input.tags : [input.category].filter(Boolean);
+  if (input.sizes !== undefined) row.sizes = input.sizes;
+  if (input.colors !== undefined) row.colors = input.colors;
+  if (input.sku !== undefined) row.sku = input.sku;
+  if (input.quantity !== undefined) row.quantity = input.quantity;
+  if (input.lowStockThreshold !== undefined) row.low_stock_threshold = input.lowStockThreshold;
+  if (input.status !== undefined) row.status = input.status;
+  if (input.seoTitle !== undefined) row.seo_title = input.seoTitle;
+  if (input.seoDescription !== undefined) row.seo_description = input.seoDescription;
+  if (input.images !== undefined) row.images = input.images;
+  return row;
 }
 
 async function fetchAllProducts() {

@@ -20,16 +20,20 @@ function mapCollectionRow(row) {
   };
 }
 
+// Only sets keys actually present in `input` — updateCollection's callers
+// (e.g. the collection detail page's edit form) send a partial patch that
+// omits fields like `tone`, and a blanket `?? default` here would silently
+// reset them on every save.
 function toRow(input) {
-  return {
-    title: input.title,
-    slug: input.slug,
-    description: input.description ?? "",
-    tone: input.tone ?? 0,
-    status: input.status ?? "visible",
-    seo_title: input.seoTitle ?? "",
-    seo_description: input.seoDescription ?? "",
-  };
+  const row = {};
+  if (input.title !== undefined) row.title = input.title;
+  if (input.slug !== undefined) row.slug = input.slug;
+  if (input.description !== undefined) row.description = input.description;
+  if (input.tone !== undefined) row.tone = input.tone;
+  if (input.status !== undefined) row.status = input.status;
+  if (input.seoTitle !== undefined) row.seo_title = input.seoTitle;
+  if (input.seoDescription !== undefined) row.seo_description = input.seoDescription;
+  return row;
 }
 
 async function fetchAllCollections() {
