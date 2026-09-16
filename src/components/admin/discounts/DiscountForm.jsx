@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Panel, { PanelHeader } from "@/components/admin/ui/Panel";
@@ -9,12 +10,17 @@ import Select from "@/components/admin/ui/form/Select";
 import Switch from "@/components/admin/ui/form/Switch";
 import Checkbox from "@/components/admin/ui/form/Checkbox";
 import { discountFormSchema, DISCOUNT_TYPES } from "@/lib/admin/types/discount";
-import { useCollectionsStore } from "@/lib/admin/store/collections-store";
-import { useProductsStore } from "@/lib/admin/store/products-store";
+import { listCollections } from "@/lib/admin/services/collection-service";
+import { listProducts } from "@/lib/admin/services/product-service";
 
 export default function DiscountForm({ defaultValues, formId, onValidSubmit }) {
-  const collections = useCollectionsStore((s) => s.items);
-  const products = useProductsStore((s) => s.items);
+  const [collections, setCollections] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    listCollections().then(setCollections);
+    listProducts({ pageSize: 1000 }).then((res) => setProducts(res.items));
+  }, []);
 
   const {
     register,

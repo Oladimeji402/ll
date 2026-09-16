@@ -30,14 +30,14 @@ import {
   addProductToCollection,
   removeProductFromCollection,
 } from "@/lib/admin/services/collection-service";
-import { useProductsStore } from "@/lib/admin/store/products-store";
+import { listProducts } from "@/lib/admin/services/product-service";
 
 export default function CollectionDetailPage({ params }) {
   const { id } = use(params);
   const mounted = useMounted();
   const router = useRouter();
   const toast = useToast();
-  const allProducts = useProductsStore((s) => s.items);
+  const [allProducts, setAllProducts] = useState([]);
 
   const [collection, setCollection] = useState(null);
   const [products, setProducts] = useState([]);
@@ -59,13 +59,14 @@ export default function CollectionDetailPage({ params }) {
     }
     setCollection(c);
     setForm({ title: c.title, description: c.description, status: c.status, seoTitle: c.seoTitle, seoDescription: c.seoDescription });
-    setProducts(getCollectionProducts(id));
+    setProducts(await getCollectionProducts(id));
     setLoading(false);
   }
 
   useEffect(() => {
     if (!mounted) return;
     refresh();
+    listProducts({ pageSize: 1000 }).then((res) => setAllProducts(res.items));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, id]);
 

@@ -17,7 +17,7 @@ import PlaceholderImage from "@/components/ui/PlaceholderImage";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
 import { formatCurrency, formatDate } from "@/lib/admin/utils/format";
 import { listProducts, bulkUpdateStatus } from "@/lib/admin/services/product-service";
-import { useCollectionsStore } from "@/lib/admin/store/collections-store";
+import { listCollections } from "@/lib/admin/services/collection-service";
 import { useToast } from "@/components/admin/ui/Toast";
 
 const STATUS_TABS = [
@@ -31,7 +31,7 @@ export default function ProductsPage() {
   const mounted = useMounted();
   const router = useRouter();
   const toast = useToast();
-  const collections = useCollectionsStore((s) => s.items);
+  const [collections, setCollections] = useState([]);
 
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
@@ -44,6 +44,10 @@ export default function ProductsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => setPage(1), [status, search]);
+
+  useEffect(() => {
+    listCollections().then(setCollections);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;

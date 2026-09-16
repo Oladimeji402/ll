@@ -57,15 +57,18 @@ export default function ProductDetailPage({ params }) {
   useEffect(() => {
     if (!mounted) return;
     let cancelled = false;
-    getProduct(id).then((p) => {
+    getProduct(id).then(async (p) => {
       if (cancelled) return;
       if (!p) {
         setError(true);
-      } else {
-        setProduct(p);
-        setPerformance(getProductPerformance(id));
-        setActivity(getActivityForResource(id));
+        setLoading(false);
+        return;
       }
+      setProduct(p);
+      const perf = await getProductPerformance(id);
+      if (cancelled) return;
+      setPerformance(perf);
+      setActivity(getActivityForResource(id));
       setLoading(false);
     });
     return () => {

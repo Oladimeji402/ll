@@ -15,14 +15,14 @@ import { useToast } from "@/components/admin/ui/Toast";
 import { useMounted } from "@/lib/admin/utils/use-mounted";
 import { generateId } from "@/lib/admin/utils/id";
 import { getHomepageContent, updateHomepageContent } from "@/lib/admin/services/content-service";
-import { useCollectionsStore } from "@/lib/admin/store/collections-store";
-import { useProductsStore } from "@/lib/admin/store/products-store";
+import { listCollections } from "@/lib/admin/services/collection-service";
+import { listProducts } from "@/lib/admin/services/product-service";
 
 export default function HomepageContentPage() {
   const mounted = useMounted();
   const toast = useToast();
-  const collections = useCollectionsStore((s) => s.items);
-  const products = useProductsStore((s) => s.items);
+  const [collections, setCollections] = useState([]);
+  const [products, setProducts] = useState([]);
 
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +34,8 @@ export default function HomepageContentPage() {
       setContent(c);
       setLoading(false);
     });
+    listCollections().then(setCollections);
+    listProducts({ pageSize: 1000 }).then((res) => setProducts(res.items));
   }, [mounted]);
 
   function update(patch) {

@@ -1,13 +1,83 @@
-import { useProductsStore } from "../store/products-store";
-import { useCollectionsStore } from "../store/collections-store";
-import { useOrdersStore } from "../store/orders-store";
-import { generateId, generateSku } from "../utils/id";
-import { simulateLatency } from "../utils/async";
+import { createClient } from "@/lib/supabase/client";
 import { matchesSearch, sortBy, paginate } from "../utils/list-query";
 import { logActivity } from "./activity-service";
 import { pushNotification } from "./notification-service";
 
 const SEARCH_FIELDS = ["title", "sku", "category"];
+
+function mapProductRow(row) {
+  const collectionIds = (row.product_collections ?? []).map((pc) => pc.collection_id);
+  const variants =
+    row.sizes.length && row.colors.length
+      ? row.sizes.flatMap((size) =>
+          row.colors.map((color) => ({
+            id: `${size}-${color}`,
+            size,
+            color,
+            sku: `${row.sku}-${size}${color[0]}`,
+            quantity: Math.round(row.quantity / (row.sizes.length * row.colors.length)),
+          })),
+        )
+      : [];
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    slug: row.slug,
+    price: Number(row.price),
+    compareAtPrice: row.compare_at_price == null ? null : Number(row.compare_at_price),
+    category: row.category,
+    collectionIds,
+    tags: row.tags,
+    sizes: row.sizes,
+    colors: row.colors,
+    sku: row.sku,
+    quantity: row.quantity,
+    lowStockThreshold: row.low_stock_threshold,
+    status: row.status,
+    seoTitle: row.seo_title,
+    seoDescription: row.seo_description,
+    images: row.images,
+    variants,
+    unitsSold: row.units_sold,
+    revenue: Number(row.revenue),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toRow(input) {
+  return {
+    title: input.title,
+    description: input.description ?? "",
+    slug: input.slug,
+    price: input.price,
+    compare_at_price: input.compareAtPrice ?? null,
+    category: input.category,
+    tags: input.tags?.length ? input.tags : [input.category].filter(Boolean),
+    sizes: input.sizes ?? [],
+    colors: input.colors ?? [],
+    sku: input.sku,
+    quantity: input.quantity ?? 0,
+    low_stock_threshold: input.lowStockThreshold ?? 5,
+    status: input.status ?? "draft",
+    seo_title: input.seoTitle ?? "",
+    seo_description: input.seoDescription ?? "",
+    images: input.images ?? [],
+  };
+}
+
+async function fetchAllProducts() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, product_collections(collection_id)")
+    .order("updated_at", { ascending: false });
+
+  if (error) throw error;
+  return data.map(mapProductRow);
+}
 
 export function filterProducts(products, { search, status, category, collectionId } = {}) {
   return products.filter((product) => {
@@ -27,81 +97,81 @@ export async function listProducts({
   page = 1,
   pageSize = 10,
 } = {}) {
-  await simulateLatency();
-  const all = useProductsStore.getState().items;
+  const all = await fetchAllProducts();
   const filtered = filterProducts(all, { search, status, category, collectionId });
   const sorted = sortBy(filtered, sort);
   return paginate(sorted, { page, pageSize });
 }
 
 export async function getProduct(id) {
-  await simulateLatency(250);
-  return useProductsStore.getState().items.find((p) => p.id === id) ?? null;
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, product_collections(collection_id)")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapProductRow(data) : null;
 }
 
-export function getProductSync(id) {
-  return useProductsStore.getState().items.find((p) => p.id === id) ?? null;
-}
+async function syncCollectionMembership(supabase, productId, collectionIds) {
+  const { data: existing, error: existingError } = await supabase
+    .from("product_collections")
+    .select("collection_id")
+    .eq("product_id", productId);
+  if (existingError) throw existingError;
 
-function syncCollectionMembership(product) {
-  const collections = useCollectionsStore.getState().items.map((collection) => {
-    const has = collection.productIds.includes(product.id);
-    const should = product.collectionIds.includes(collection.id);
-    if (has === should) return collection;
-    return {
-      ...collection,
-      productIds: should
-        ? [...collection.productIds, product.id]
-        : collection.productIds.filter((id) => id !== product.id),
-    };
-  });
-  useCollectionsStore.getState()._setAll(collections);
+  const current = new Set((existing ?? []).map((row) => row.collection_id));
+  const next = new Set(collectionIds ?? []);
+
+  const toAdd = [...next].filter((id) => !current.has(id));
+  const toRemove = [...current].filter((id) => !next.has(id));
+
+  if (toAdd.length) {
+    const { error } = await supabase
+      .from("product_collections")
+      .insert(toAdd.map((collectionId) => ({ product_id: productId, collection_id: collectionId })));
+    if (error) throw error;
+  }
+  if (toRemove.length) {
+    const { error } = await supabase
+      .from("product_collections")
+      .delete()
+      .eq("product_id", productId)
+      .in("collection_id", toRemove);
+    if (error) throw error;
+  }
 }
 
 export async function createProduct(input) {
-  await simulateLatency(500);
-  const now = new Date().toISOString();
-  const id = generateId("prod");
-  const sku = input.sku?.trim() || generateSku(input.title, Math.floor(Math.random() * 9000) + 1000);
+  const supabase = createClient();
+  const row = toRow(input);
 
-  const variants =
-    input.sizes.length && input.colors.length
-      ? input.sizes.flatMap((size) =>
-          input.colors.map((color) => ({
-            id: generateId("var"),
-            size,
-            color,
-            sku: `${sku}-${size}${color[0]}`,
-            quantity: Math.round(input.quantity / (input.sizes.length * input.colors.length)),
-          })),
-        )
-      : [];
+  const { data, error } = await supabase.from("products").insert(row).select().single();
+  if (error) throw error;
 
-  const product = {
-    id,
-    ...input,
-    sku,
-    variants,
-    tags: input.tags?.length ? input.tags : [input.category].filter(Boolean),
-    unitsSold: 0,
-    revenue: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
+  if (input.collectionIds?.length) {
+    await syncCollectionMembership(supabase, data.id, input.collectionIds);
+  }
 
-  useProductsStore.getState()._upsert(product);
-  syncCollectionMembership(product);
-  logActivity({ action: "created product", resourceType: "product", resourceId: id, resourceLabel: product.title });
+  const product = mapProductRow({ ...data, product_collections: (input.collectionIds ?? []).map((id) => ({ collection_id: id })) });
+  logActivity({ action: "created product", resourceType: "product", resourceId: product.id, resourceLabel: product.title });
   return product;
 }
 
 export async function updateProduct(id, patch) {
-  await simulateLatency(450);
-  const existing = getProductSync(id);
-  if (!existing) throw new Error("Product not found");
-  const updated = { ...existing, ...patch, updatedAt: new Date().toISOString() };
-  useProductsStore.getState()._upsert(updated);
-  syncCollectionMembership(updated);
+  const supabase = createClient();
+  const row = toRow(patch);
+
+  const { data, error } = await supabase.from("products").update(row).eq("id", id).select().single();
+  if (error) throw error;
+
+  if (patch.collectionIds) {
+    await syncCollectionMembership(supabase, id, patch.collectionIds);
+  }
+
+  const updated = await getProduct(id);
   logActivity({ action: "updated", resourceType: "product", resourceId: id, resourceLabel: updated.title });
 
   if (patch.quantity != null && patch.quantity <= updated.lowStockThreshold) {
@@ -116,26 +186,19 @@ export async function updateProduct(id, patch) {
 }
 
 export async function deleteProduct(id) {
-  await simulateLatency(400);
-  const product = getProductSync(id);
-  useProductsStore.getState()._remove(id);
+  const supabase = createClient();
+  const product = await getProduct(id);
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) throw error;
   if (product) {
-    const collections = useCollectionsStore
-      .getState()
-      .items.map((c) => ({ ...c, productIds: c.productIds.filter((pid) => pid !== id) }));
-    useCollectionsStore.getState()._setAll(collections);
     logActivity({ action: "deleted product", resourceType: "product", resourceId: id, resourceLabel: product.title });
   }
 }
 
 export async function bulkUpdateStatus(ids, status) {
-  await simulateLatency(400);
-  const now = new Date().toISOString();
-  const updated = useProductsStore
-    .getState()
-    .items.filter((p) => ids.includes(p.id))
-    .map((p) => ({ ...p, status, updatedAt: now }));
-  useProductsStore.getState()._upsertMany(updated);
+  const supabase = createClient();
+  const { data, error } = await supabase.from("products").update({ status }).in("id", ids).select();
+  if (error) throw error;
   logActivity({
     action: `bulk-updated ${ids.length} product(s) to`,
     resourceType: "product",
@@ -143,23 +206,24 @@ export async function bulkUpdateStatus(ids, status) {
     resourceLabel: status,
     details: `Changed status of ${ids.length} product(s) to "${status}"`,
   });
-  return updated;
+  return data;
 }
 
 export async function bulkArchive(ids) {
   return bulkUpdateStatus(ids, "archived");
 }
 
-export function getProductPerformance(id) {
-  const product = getProductSync(id);
+export async function getProductPerformance(id) {
+  const product = await getProduct(id);
   if (!product) return null;
-  const orders = useOrdersStore
-    .getState()
-    .items.filter((order) => order.items.some((item) => item.productId === id))
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  return { unitsSold: product.unitsSold, revenue: product.revenue, recentOrders: orders.slice(0, 8) };
+  // Real order-linked sales history isn't wired up yet — admin orders are
+  // still a separate mock domain (see orders-store).
+  return { unitsSold: product.unitsSold, revenue: product.revenue, recentOrders: [] };
 }
 
-export function getCategories() {
-  return Array.from(new Set(useProductsStore.getState().items.map((p) => p.category)));
+export async function getCategories() {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("products").select("category");
+  if (error) throw error;
+  return Array.from(new Set(data.map((row) => row.category).filter(Boolean)));
 }

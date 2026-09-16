@@ -1,106 +1,153 @@
 import { slugify } from "@/lib/utils";
-import { useCollectionsStore } from "../store/collections-store";
-import { useProductsStore } from "../store/products-store";
-import { generateId } from "../utils/id";
-import { simulateLatency } from "../utils/async";
+import { createClient } from "@/lib/supabase/client";
 import { matchesSearch, sortBy } from "../utils/list-query";
 import { logActivity } from "./activity-service";
 
+function mapCollectionRow(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    description: row.description,
+    tone: row.tone,
+    status: row.status,
+    seoTitle: row.seo_title,
+    seoDescription: row.seo_description,
+    productIds: (row.product_collections ?? []).map((pc) => pc.product_id),
+    position: row.position,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toRow(input) {
+  return {
+    title: input.title,
+    slug: input.slug,
+    description: input.description ?? "",
+    tone: input.tone ?? 0,
+    status: input.status ?? "visible",
+    seo_title: input.seoTitle ?? "",
+    seo_description: input.seoDescription ?? "",
+  };
+}
+
+async function fetchAllCollections() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("collections")
+    .select("*, product_collections(product_id)")
+    .order("position", { ascending: true });
+
+  if (error) throw error;
+  return data.map(mapCollectionRow);
+}
+
 export async function listCollections({ search = "", sort = { field: "position", direction: "asc" } } = {}) {
-  await simulateLatency(250);
-  const all = useCollectionsStore.getState().items;
+  const all = await fetchAllCollections();
   const filtered = all.filter((c) => matchesSearch(c, search, ["title", "slug"]));
   return sortBy(filtered, sort);
 }
 
 export async function getCollection(id) {
-  await simulateLatency(250);
-  return useCollectionsStore.getState().items.find((c) => c.id === id) ?? null;
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("collections")
+    .select("*, product_collections(product_id)")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapCollectionRow(data) : null;
 }
 
-export function getCollectionSync(id) {
-  return useCollectionsStore.getState().items.find((c) => c.id === id) ?? null;
-}
+export async function getCollectionProducts(id) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("product_collections")
+    .select("products(id, title, slug, price, images)")
+    .eq("collection_id", id)
+    .order("position", { ascending: true });
 
-export function getCollectionProducts(id) {
-  const collection = getCollectionSync(id);
-  if (!collection) return [];
-  const products = useProductsStore.getState().items;
-  return collection.productIds
-    .map((productId) => products.find((p) => p.id === productId))
-    .filter(Boolean);
+  if (error) throw error;
+  return (data ?? [])
+    .map((row) => row.products)
+    .filter(Boolean)
+    .map((p) => ({ id: p.id, title: p.title, slug: p.slug, price: Number(p.price), images: p.images }));
 }
 
 export async function createCollection(input) {
-  await simulateLatency(450);
-  const now = new Date().toISOString();
-  const id = slugify(input.title) || generateId("coll");
-  const position = useCollectionsStore.getState().items.length;
-  const collection = { id, ...input, productIds: [], position, createdAt: now, updatedAt: now };
-  useCollectionsStore.getState()._upsert(collection);
-  logActivity({ action: "created collection", resourceType: "collection", resourceId: id, resourceLabel: collection.title });
+  const supabase = createClient();
+  const { count } = await supabase.from("collections").select("id", { count: "exact", head: true });
+
+  const row = { ...toRow(input), slug: input.slug || slugify(input.title), position: count ?? 0 };
+  const { data, error } = await supabase.from("collections").insert(row).select().single();
+  if (error) throw error;
+
+  const collection = mapCollectionRow(data);
+  logActivity({ action: "created collection", resourceType: "collection", resourceId: collection.id, resourceLabel: collection.title });
   return collection;
 }
 
 export async function updateCollection(id, patch) {
-  await simulateLatency(400);
-  const existing = getCollectionSync(id);
-  if (!existing) throw new Error("Collection not found");
-  const updated = { ...existing, ...patch, updatedAt: new Date().toISOString() };
-  useCollectionsStore.getState()._upsert(updated);
+  const supabase = createClient();
+  const row = toRow(patch);
+  const { error } = await supabase.from("collections").update(row).eq("id", id);
+  if (error) throw error;
+
+  const updated = await getCollection(id);
   logActivity({ action: "updated collection", resourceType: "collection", resourceId: id, resourceLabel: updated.title });
   return updated;
 }
 
 export async function deleteCollection(id) {
-  await simulateLatency(400);
-  const collection = getCollectionSync(id);
-  useCollectionsStore.getState()._remove(id);
+  const supabase = createClient();
+  const collection = await getCollection(id);
+  const { error } = await supabase.from("collections").delete().eq("id", id);
+  if (error) throw error;
   if (collection) {
-    const products = useProductsStore
-      .getState()
-      .items.map((p) =>
-        p.collectionIds.includes(id)
-          ? { ...p, collectionIds: p.collectionIds.filter((cid) => cid !== id) }
-          : p,
-      );
-    useProductsStore.getState()._upsertMany(products);
     logActivity({ action: "deleted collection", resourceType: "collection", resourceId: id, resourceLabel: collection.title });
   }
 }
 
 export async function reorderCollectionProducts(id, orderedProductIds) {
-  await simulateLatency(300);
-  return updateCollection(id, { productIds: orderedProductIds });
+  const supabase = createClient();
+  await Promise.all(
+    orderedProductIds.map((productId, index) =>
+      supabase
+        .from("product_collections")
+        .update({ position: index })
+        .eq("collection_id", id)
+        .eq("product_id", productId),
+    ),
+  );
+  return getCollection(id);
 }
 
 export async function addProductToCollection(collectionId, productId) {
-  await simulateLatency(300);
-  const collection = getCollectionSync(collectionId);
-  if (!collection || collection.productIds.includes(productId)) return collection;
-  const updatedCollection = await updateCollection(collectionId, {
-    productIds: [...collection.productIds, productId],
-  });
-  const product = useProductsStore.getState().items.find((p) => p.id === productId);
-  if (product && !product.collectionIds.includes(collectionId)) {
-    useProductsStore.getState()._upsert({ ...product, collectionIds: [...product.collectionIds, collectionId] });
-  }
-  return updatedCollection;
+  const supabase = createClient();
+  const { count } = await supabase
+    .from("product_collections")
+    .select("product_id", { count: "exact", head: true })
+    .eq("collection_id", collectionId);
+
+  const { error } = await supabase
+    .from("product_collections")
+    .upsert(
+      { collection_id: collectionId, product_id: productId, position: count ?? 0 },
+      { onConflict: "product_id,collection_id" },
+    );
+  if (error) throw error;
+  return getCollection(collectionId);
 }
 
 export async function removeProductFromCollection(collectionId, productId) {
-  await simulateLatency(300);
-  const collection = getCollectionSync(collectionId);
-  if (!collection) return null;
-  const updatedCollection = await updateCollection(collectionId, {
-    productIds: collection.productIds.filter((id) => id !== productId),
-  });
-  const product = useProductsStore.getState().items.find((p) => p.id === productId);
-  if (product) {
-    useProductsStore.getState()._upsert({
-      ...product,
-      collectionIds: product.collectionIds.filter((id) => id !== collectionId),
-    });
-  }
-  return updatedCollection;
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("product_collections")
+    .delete()
+    .eq("collection_id", collectionId)
+    .eq("product_id", productId);
+  if (error) throw error;
+  return getCollection(collectionId);
 }

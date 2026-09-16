@@ -16,15 +16,18 @@ import { slugify } from "@/lib/utils";
 import { productFormSchema, PRODUCT_STATUSES } from "@/lib/admin/types/product";
 import { SIZES, COLORS } from "@/lib/admin/mock-data/fixtures";
 import { getCategories } from "@/lib/admin/services/product-service";
-import { useCollectionsStore } from "@/lib/admin/store/collections-store";
+import { listCollections } from "@/lib/admin/services/collection-service";
 import { generateId } from "@/lib/admin/utils/id";
 
 export default function ProductForm({ defaultValues, formId, onValidSubmit, onDirtyChange }) {
-  const collections = useCollectionsStore((s) => s.items);
+  const [collections, setCollections] = useState([]);
   const slugTouched = useRef(defaultValues.slug !== "");
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => setCategories(getCategories()), []);
+  useEffect(() => {
+    getCategories().then(setCategories);
+    listCollections().then(setCollections);
+  }, []);
 
   const {
     register,

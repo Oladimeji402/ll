@@ -8,14 +8,17 @@ import { createPublicClient } from "@/lib/supabase/public";
 const REVALIDATE_SECONDS = 60;
 
 function mapProduct(row) {
+  // images is the source of truth (what the admin form manages); tone/
+  // image_count only remain as a fallback for rows that predate it.
+  const gallery = row.images?.length ? row.images : null;
   return {
     id: row.id,
     slug: row.slug,
     name: row.title,
     price: Number(row.price),
     originalPrice: row.compare_at_price ? Number(row.compare_at_price) : null,
-    tone: row.tone,
-    images: row.image_count,
+    tone: gallery ? gallery[0].tone : row.tone,
+    images: gallery ? gallery.length : row.image_count,
     sizes: row.sizes,
     description: row.description,
   };
@@ -142,7 +145,8 @@ async function fetchCollectionBySlug(slug) {
   const { data: links, error: linksError } = await supabase
     .from("product_collections")
     .select("products(*)")
-    .eq("collection_id", collectionRow.id);
+    .eq("collection_id", collectionRow.id)
+    .order("position", { ascending: true });
 
   if (linksError) throw linksError;
 
