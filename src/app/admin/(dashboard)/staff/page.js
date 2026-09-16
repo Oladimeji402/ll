@@ -51,6 +51,8 @@ export default function StaffPage() {
       setInviteOpen(false);
       setForm({ name: "", email: "", role: "Support" });
       refresh();
+    } catch (err) {
+      toast({ title: "Couldn't send invite", description: err.message, variant: "error" });
     } finally {
       setSaving(false);
     }
