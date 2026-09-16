@@ -194,3 +194,17 @@ body {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Prevent iOS Safari's auto-zoom on focus, which fires on any form control
+   under 16px and reads to the user as the whole page "overflowing". Wins
+   over Tailwind text-size utilities (text-xs/text-sm etc.) on inputs, which
+   outrank a bare element selector on specificity alone.
+   ========================================================================== */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
