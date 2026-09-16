@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "./activity-service";
 
-const SECTIONS = ["store", "checkout", "notifications", "email", "seo", "preferences", "payments"];
+const SECTIONS = ["store", "checkout", "notifications", "email", "seo", "preferences", "payments", "shipping"];
 
 export async function getSettings() {
   const supabase = createClient();

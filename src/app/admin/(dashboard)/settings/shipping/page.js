@@ -7,11 +7,9 @@ import Field from "@/components/admin/ui/form/Field";
 import Select from "@/components/admin/ui/form/Select";
 import Skeleton from "@/components/admin/ui/Skeleton";
 import { useSettingsSection } from "@/components/admin/settings/use-settings-section";
-import { useShippingStore } from "@/lib/admin/store/shipping-store";
 
 export default function ShippingSettingsPage() {
   const { value, patch, save, saving, loading } = useSettingsSection("shipping");
-  const zones = useShippingStore((s) => s.value.zones);
 
   if (loading || !value) return <Skeleton className="h-56 w-full" />;
 
@@ -19,8 +17,8 @@ export default function ShippingSettingsPage() {
     <Panel>
       <PanelHeader title="Shipping" description="Default zone used when a customer's address doesn't match any zone." actions={<Button variant="primary" size="sm" loading={saving} onClick={save}>Save</Button>} />
       <Field label="Default shipping zone">
-        <Select value={value.defaultZoneId} onChange={(e) => patch({ defaultZoneId: e.target.value })}>
-          {zones.map((z) => (
+        <Select value={value.defaultZoneId ?? ""} onChange={(e) => patch({ defaultZoneId: e.target.value })}>
+          {value.zones.map((z) => (
             <option key={z.id} value={z.id}>{z.name}</option>
           ))}
         </Select>
