@@ -47,7 +47,9 @@ export default function CustomerDetailPage({ params }) {
       const customerOrders = await getCustomerOrders(id);
       if (cancelled) return;
       setOrders(customerOrders);
-      setActivity(getActivityForResource(id));
+      const activity = await getActivityForResource(id);
+      if (cancelled) return;
+      setActivity(activity);
       setLoading(false);
     });
     return () => {

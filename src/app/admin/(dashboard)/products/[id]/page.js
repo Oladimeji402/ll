@@ -68,7 +68,9 @@ export default function ProductDetailPage({ params }) {
       const perf = await getProductPerformance(id);
       if (cancelled) return;
       setPerformance(perf);
-      setActivity(getActivityForResource(id));
+      const activity = await getActivityForResource(id);
+      if (cancelled) return;
+      setActivity(activity);
       setLoading(false);
     });
     return () => {
@@ -81,7 +83,8 @@ export default function ProductDetailPage({ params }) {
     try {
       const updated = await updateProduct(id, values);
       setProduct(updated);
-      setActivity(getActivityForResource(id));
+      const activity = await getActivityForResource(id);
+      setActivity(activity);
       toast({ title: "Product saved" });
       setDirty(false);
     } finally {
