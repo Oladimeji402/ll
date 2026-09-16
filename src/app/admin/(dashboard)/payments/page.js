@@ -43,10 +43,12 @@ export default function PaymentsPage() {
     let cancelled = false;
     setLoading(true);
     listPayments({ search, status, page, pageSize: 10 })
-      .then((res) => {
+      .then(async (res) => {
         if (cancelled) return;
         setResult(res);
-        setCounts(getPaymentCounts());
+        const counts = await getPaymentCounts();
+        if (cancelled) return;
+        setCounts(counts);
         setLoading(false);
       })
       .catch(() => !cancelled && (setError(true), setLoading(false)));
