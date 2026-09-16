@@ -1,10 +1,35 @@
-import { useReturnsStore } from "../store/returns-store";
-import { CURRENT_STAFF } from "../utils/current-user";
-import { simulateLatency } from "../utils/async";
+import { createClient } from "@/lib/supabase/client";
 import { matchesSearch, sortBy, paginate } from "../utils/list-query";
 import { logActivity } from "./activity-service";
 
 const SEARCH_FIELDS = ["returnNumber", "orderNumber", "customerName"];
+
+function mapReturnRow(row) {
+  return {
+    id: row.id,
+    returnNumber: row.return_number,
+    orderId: row.order_id,
+    orderNumber: row.orders?.order_number ?? "",
+    customerName: row.customer_name,
+    items: row.items ?? [],
+    reason: row.reason,
+    status: row.status,
+    refundAmount: Number(row.refund_amount),
+    requestedAt: row.requested_at,
+    resolvedAt: row.resolved_at,
+    notes: row.notes,
+    handledBy: row.handled_by,
+  };
+}
+
+const RETURN_SELECT = "*, orders(order_number)";
+
+async function fetchAllReturns() {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("returns").select(RETURN_SELECT);
+  if (error) throw error;
+  return data.map(mapReturnRow);
+}
 
 export async function listReturns({
   search = "",
@@ -13,8 +38,7 @@ export async function listReturns({
   page = 1,
   pageSize = 10,
 } = {}) {
-  await simulateLatency();
-  const all = useReturnsStore.getState().items;
+  const all = await fetchAllReturns();
   const filtered = all.filter((r) => {
     if (status !== "all" && r.status !== status) return false;
     return matchesSearch(r, search, SEARCH_FIELDS);
@@ -24,12 +48,14 @@ export async function listReturns({
 }
 
 export async function getReturn(id) {
-  await simulateLatency(200);
-  return useReturnsStore.getState().items.find((r) => r.id === id) ?? null;
+  const supabase = createClient();
+  const { data, error } = await supabase.from("returns").select(RETURN_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? mapReturnRow(data) : null;
 }
 
-export function getReturnCounts() {
-  const all = useReturnsStore.getState().items;
+export async function getReturnCounts() {
+  const all = await fetchAllReturns();
   return {
     all: all.length,
     requested: all.filter((r) => r.status === "requested").length,
@@ -41,18 +67,28 @@ export function getReturnCounts() {
 }
 
 export async function updateReturnStatus(id, status, note) {
-  await simulateLatency(400);
-  const existing = useReturnsStore.getState().items.find((r) => r.id === id);
+  const supabase = createClient();
+  const existing = await getReturn(id);
   if (!existing) throw new Error("Return not found");
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: staff } = user
+    ? await supabase.from("staff_members").select("name").eq("id", user.id).maybeSingle()
+    : { data: null };
+
   const resolved = ["completed", "rejected"].includes(status);
-  const updated = {
-    ...existing,
+  const patch = {
     status,
     notes: note || existing.notes,
-    handledBy: CURRENT_STAFF.name,
-    resolvedAt: resolved ? new Date().toISOString() : existing.resolvedAt,
+    handled_by: staff?.name ?? existing.handledBy,
   };
-  useReturnsStore.getState()._upsert(updated);
+  if (resolved && !existing.resolvedAt) patch.resolved_at = new Date().toISOString();
+
+  const { error } = await supabase.from("returns").update(patch).eq("id", id);
+  if (error) throw error;
+
   logActivity({
     action: "updated return status for",
     resourceType: "return",
@@ -60,5 +96,5 @@ export async function updateReturnStatus(id, status, note) {
     resourceLabel: existing.returnNumber,
     details: `Marked return ${existing.returnNumber} as ${status}`,
   });
-  return updated;
+  return getReturn(id);
 }

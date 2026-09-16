@@ -44,10 +44,12 @@ export default function ReturnsPage() {
     let cancelled = false;
     setLoading(true);
     listReturns({ search, status, page, pageSize: 10 })
-      .then((res) => {
+      .then(async (res) => {
         if (cancelled) return;
         setResult(res);
-        setCounts(getReturnCounts());
+        const counts = await getReturnCounts();
+        if (cancelled) return;
+        setCounts(counts);
         setLoading(false);
       })
       .catch(() => !cancelled && (setError(true), setLoading(false)));
